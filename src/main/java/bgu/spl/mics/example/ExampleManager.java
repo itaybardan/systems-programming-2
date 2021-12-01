@@ -1,4 +1,4 @@
-package bgu.spl.mics.example;
+package java.bgu.spl.mics.example;
 
 import bgu.spl.mics.example.services.ExampleBroadcastListenerService;
 import bgu.spl.mics.example.services.ExampleMessageSenderService;
@@ -11,14 +11,13 @@ import java.util.Scanner;
 public class ExampleManager {
 
     public static void main(String[] args) {
-        Map<String, ServiceCreator> serviceCreators = new HashMap<>();
+        Map<String, bgu.spl.mics.example.ServiceCreator> serviceCreators = new HashMap<>();
         serviceCreators.put("ev-handler", ExampleEventHandlerService::new);
         serviceCreators.put("brod-listener", ExampleBroadcastListenerService::new);
         serviceCreators.put("sender", ExampleMessageSenderService::new);
 
-        Scanner sc = new Scanner(System.in);
-        boolean quit = false;
-        try {
+        try (Scanner sc = new Scanner(System.in)) {
+            boolean quit = false;
             System.out.println("Example manager is started - supported commands are: start,quit");
             System.out.println("Supporting services: " + serviceCreators.keySet());
             while (!quit) {
@@ -34,7 +33,7 @@ public class ExampleManager {
                                 if (params.length < 3) {
                                     throw new IllegalArgumentException("Expecting service type and id, supported types: " + serviceCreators.keySet());
                                 }
-                                ServiceCreator creator = serviceCreators.get(params[1]);
+                                bgu.spl.mics.example.ServiceCreator creator = serviceCreators.get(params[1]);
                                 if (creator == null) {
                                     throw new IllegalArgumentException("unknown service type, supported types: " + serviceCreators.keySet());
                                 }
@@ -56,7 +55,6 @@ public class ExampleManager {
             t.printStackTrace();
         } finally {
             System.out.println("Manager Terminating - UNGRACEFULLY!");
-            sc.close();
             System.exit(0);
         }
     }
