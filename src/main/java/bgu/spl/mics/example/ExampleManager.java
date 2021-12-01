@@ -1,8 +1,9 @@
-package java.bgu.spl.mics.example;
+package bgu.spl.mics.example;
 
 import bgu.spl.mics.example.services.ExampleBroadcastListenerService;
 import bgu.spl.mics.example.services.ExampleMessageSenderService;
 import bgu.spl.mics.example.services.ExampleEventHandlerService;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;

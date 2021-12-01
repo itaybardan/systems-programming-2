@@ -1,6 +1,7 @@
 package com;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import bgu.spl.mics.application.objects.CPU;
 import org.junit.Before;
@@ -8,19 +9,15 @@ import org.junit.Test;
 
 public class CPUTest {
 
+    private CPU cpu;
+
     @Before
     public void setUp() throws Exception {
-        CPU cpu = new CPU();
+        this.cpu = new CPU(1);
     }
 
     @Test
-    public void testMultiply() {
-        assertEquals(0, 0);
-    }
-
-    @Test
-    public void testMultiplyWithZero() {
-        assertEquals(0, 0);
-        assertEquals(0, 0);
+    public void testNumberOfCores() {
+        assertTrue(this.cpu.getCores() > 0);
     }
 }
