@@ -1,4 +1,4 @@
-package com;
+package bgu.spl.mics.application.objects;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

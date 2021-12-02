@@ -1,4 +1,4 @@
-package com;
+package bgu.spl.mics;
 
 public class MessageBusTest {
 }
