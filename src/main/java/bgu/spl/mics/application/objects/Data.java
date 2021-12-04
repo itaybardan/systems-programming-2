@@ -15,4 +15,18 @@ public class Data {
     private Type type;
     private int processed;
     private int size;
+
+    public int getTickTime() {
+        switch (this.type) {
+            case Images:
+                return 4;
+            case Tabular:
+                return 2;
+            case Text:
+                return 1;
+            default:
+                return 0;
+        }
+
+    }
 }
