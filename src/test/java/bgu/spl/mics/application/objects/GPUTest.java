@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.assertTrue;
 
 public class GPUTest {
     private GPU gpu;
@@ -29,5 +30,10 @@ public class GPUTest {
         long computingTime = GPU.typeToTrainTickTime.get(this.gpu.getType());
         long endTickTime = this.gpu.getTicks();
         assertEquals(endTickTime - startTickTime, computingTime);
+    }
+
+    @Test
+    public void testAvailablePlaceIsNonNegative() {
+        assertTrue(this.gpu.getAvailableProcessedDataSpace() >= 0);
     }
 }
