@@ -47,7 +47,7 @@ public class CPU {
      *
      * @pre getDataBatchSize() > 0
      * @post @pre(getDataBatchSize()) == @post(getDataBatchSize()) + 1
-     * @post @pre(tickTime) - @post(tickTime) > (32 / getCores()) * @pre(result).tickTime
+     * @post @pre(tickTime) - @post(tickTime) == (32 / getCores()) * @pre(result).tickTime
      */
     public void processData() {
 

@@ -1,5 +1,10 @@
 package bgu.spl.mics.application.objects;
 
+import org.junit.Test;
+
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
+
 public class GPUTest {
     private GPU gpu;
 
@@ -10,21 +15,19 @@ public class GPUTest {
     public void tearDown() throws Exception {
     }
 
-    public void testGetType() {
+    @Test
+    public void testSendDataBatchToCluster() {
+        this.gpu.sendDataBatchToCluster();
+        assertEquals(0, this.gpu.getAvailableProcessedDataSpace());
     }
 
-    public void testSetType() {
-    }
-
-    public void testGetModel() {
-    }
-
-    public void testSetModel() {
-    }
-
-    public void testGetCluster() {
-    }
-
-    public void testSetCluster() {
+    @Test
+    public void testTrainDataBatchModelComputingTime() {
+        assertNotNull(this.gpu.getProcessedData().peek());
+        long startTickTime = this.gpu.getTicks();
+        this.gpu.trainDataBatchModel();
+        long computingTime = GPU.typeToTrainTickTime.get(this.gpu.getType());
+        long endTickTime = this.gpu.getTicks();
+        assertEquals(endTickTime - startTickTime, computingTime);
     }
 }
