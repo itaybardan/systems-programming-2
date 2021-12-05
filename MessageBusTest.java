@@ -62,22 +62,25 @@ public class MessageBusTest { //each test needs to be done seperately as Message
     @Test
     public void subscribeEventTest() {
 
-
-        assertEquals(true, messageBus.isEventSubsEmpty());
-
+        assertEquals(true, messageBus.isEventSubsEmpty(event.getClass()));
+        messageBus.register(microService);
 
         messageBus.subscribeEvent(event.getClass(), microService);
-        assertEquals(false, messageBus.isEventSubsEmpty());
+        assertEquals(false, messageBus.isEventSubsEmpty(event.getClass()));
 
+        messageBus.unregister(microService);
+        assertEquals(true, messageBus.isEventSubsEmpty(event.getClass()));
     }
 
     @Test
     public void subscribeBroadcastTest() {
 
-        assertEquals(true, messageBus.isBroadcastSubsEmpty());
-
+        assertEquals(true, messageBus.isBroadcastSubsEmpty(broadcast.getClass()));
+        messageBus.register(microService);
         messageBus.subscribeBroadcast(broadcast.getClass(), microService);
-        assertEquals(false, messageBus.isBroadcastSubsEmpty());
+        assertEquals(false, messageBus.isBroadcastSubsEmpty(broadcast.getClass()));
+
+        messageBus.unregister(microService);
 
     }
 
@@ -90,6 +93,8 @@ public class MessageBusTest { //each test needs to be done seperately as Message
         event.setFuture(messageBus.sendEvent(event));
         messageBus.complete(event, "mazazzi");
         assertTrue(event.getFuture().isDone());
+
+        messageBus.unregister(microService);
 
     }
 
@@ -120,6 +125,8 @@ public class MessageBusTest { //each test needs to be done seperately as Message
 
         assertTrue(wasNotifiedByBroadcast.get());
 
+        messageBus.unregister(microService);
+
     }
 
     @Test
@@ -142,6 +149,8 @@ public class MessageBusTest { //each test needs to be done seperately as Message
         messageBus.register(microService);
         assertTrue(messageBus.isRegistered(microService));
 
+        messageBus.unregister(microService);
+
     }
 
     @Test
@@ -152,6 +161,8 @@ public class MessageBusTest { //each test needs to be done seperately as Message
         messageBus.register(microService); // Insert a microservice
         messageBus.unregister(microService);
         assertFalse(messageBus.isRegistered(microService));
+
+
     }
 
     @Test
@@ -183,5 +194,7 @@ public class MessageBusTest { //each test needs to be done seperately as Message
             e.printStackTrace();
         }
 
+
+        messageBus.unregister(microService);
     }
 }
