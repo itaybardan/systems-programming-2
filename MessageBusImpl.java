@@ -38,11 +38,14 @@ public class MessageBusImpl implements MessageBus {
 
 
     //Basic Queries
-    public boolean isEventSubsEmpty() {
-        return event_subscribers.isEmpty();
+    public boolean isEventSubsEmpty(Class<? extends Event> type)
+    {
+        if(event_subscribers.get(type) == null) return true;
+        return event_subscribers.get(type).getKey().isEmpty();
     }
-    public boolean isBroadcastSubsEmpty() {
-        return broadcast_subscribers.isEmpty();
+    public boolean isBroadcastSubsEmpty(Class<? extends Broadcast> type) {
+        if(broadcast_subscribers.get(type) == null) return true;
+        return broadcast_subscribers.get(type).isEmpty();
     }
     public boolean isRegistered(MicroService m){
         return messagesQueue.containsKey(m);
@@ -147,14 +150,15 @@ public class MessageBusImpl implements MessageBus {
             //TODO when we initialize a micro service, we subscribe to the appropriate event and initialize it's event_sub field.
             event_subscribers.get(type).getKey().remove(m);
             int prev_counter = event_subscribers.get(type).getValue();
+            System.out.println(prev_counter);
             if(prev_counter == event_subscribers.get(type).getKey().size() && prev_counter != 0) //The counter's value is now illegal, for example it's 5 while there are now 5 MS's
             event_subscribers.get(type).setValue( prev_counter-1 );
         }
 
         type = m.getBroadcastSub(); // Unsubscribing from the broadcast
-        if(type != null && broadcast_subscribers.containsKey(type)){ // meaning this micro service is registered to the broadcast subs of said broadcast.
+        if(type != null && broadcast_subscribers.containsKey(type) && broadcast_subscribers.get(type).contains(m)){ // meaning this micro service is registered to the broadcast subs of said broadcast.
             //TODO when we initialize a micro service, we subscribe to the appropriate broadcast and initialize it's broadcast_sub field.
-            event_subscribers.get(type).getKey().remove(m);
+            broadcast_subscribers.get(type).remove(m);
         }
 
         messagesQueue.remove(m); //Finally, remove the message queue of said micro service.
