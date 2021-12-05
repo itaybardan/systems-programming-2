@@ -16,8 +16,16 @@ public class GPU {
 
     enum Type {RTX3090, RTX2080, GTX1080}
 
-    public static Map<Type, Integer> typeToTrainTickTime = Map.of(Type.RTX3090, 1, Type.RTX2080, 2, Type.GTX1080, 4);
-    public static Map<Type, Integer> typeToProcessedDataCapacity = Map.of(Type.RTX3090, 32, Type.RTX2080, 16, Type.GTX1080, 8);
+    public static Map<Type, Integer> typeToTrainTickTime = new HashMap<Type, Integer>() {{
+        put(Type.RTX3090, 1);
+        put(Type.RTX2080, 2);
+        put(Type.GTX1080, 4);
+    }};
+    public static Map<Type, Integer> typeToProcessedDataCapacity = new HashMap<Type, Integer>() {{
+        put(Type.RTX3090, 32);
+        put(Type.RTX2080, 16);
+        put(Type.GTX1080, 8);
+    }};
     private Type type;
     private Model model;
     private Cluster cluster;
@@ -67,6 +75,7 @@ public class GPU {
     public int getAvailableProcessedDataSpace() {
         return GPU.typeToProcessedDataCapacity.get(this.type) - this.processedData.size();
     }
+
     public int getTicks() {
         return this.ticks;
     }

@@ -19,9 +19,11 @@ package bgu.spl.mics;
  * <p>
  */
 public abstract class MicroService implements Runnable {
-
+    protected Class<? extends Event> eventSubType;
+    protected Class<? extends Broadcast> broadcastSubType;
     private boolean terminated = false;
     private final String name;
+    public synchronized void notifyMicroService(){ };
 
     /**
      * @param name the micro-service name (used mainly for debugging purposes -
@@ -157,6 +159,14 @@ public abstract class MicroService implements Runnable {
         while (!terminated) {
             System.out.println("NOT IMPLEMENTED!!!"); //TODO: you should delete this line :)
         }
+    }
+
+    public Class<? extends Event> getEventSub(){
+        return this.eventSubType;
+    }
+
+    public Class<? extends Broadcast> getBroadcastSub(){
+        return this.broadcastSubType;
     }
 
 }
