@@ -18,8 +18,8 @@ public class Student {
     private int name;
     private String department;
     private Degree status;
-    private AtomicInteger publications; //these values need to be updates instantly.
-    private AtomicInteger papersRead;
+    private AtomicInteger publications; //these values need to be updated instantly.
+    private AtomicInteger papersRead; //these values need to be updated instantly.
     private ArrayList<Model> models;
 
     public Student(int _name, String _department, Degree _status, ArrayList<Model> _models) {
