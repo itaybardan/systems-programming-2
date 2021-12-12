@@ -21,13 +21,13 @@ public class Student {
     private int papersRead;
     private ArrayList<Model> models;
 
-    public Student(int _name, String _department, Degree _status) {
+    public Student(int _name, String _department, Degree _status, ArrayList<Model> _models) {
         name = _name;
         department = _department;
         status = _status;
         publications = 0;
         papersRead = 0;
-        models = new ArrayList<>();
+        models = _models;
     }
     
 }
