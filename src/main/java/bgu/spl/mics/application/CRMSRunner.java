@@ -100,8 +100,15 @@ public class CRMSRunner {
         ArrayList<Student> students = new ArrayList<>();
         for (JsonElement studentInfo : rootObject.get("Students").getAsJsonArray()) {
             JsonObject studentInfoObject = studentInfo.getAsJsonObject();
+            ArrayList<Model> models = new ArrayList<>();
+            for (JsonElement modelInfo : studentInfoObject.get("models").getAsJsonArray()) {
+                JsonObject modelInfoObject = modelInfo.getAsJsonObject();
+                models.add(new Model(modelInfoObject.get("name").getAsString(),
+                        modelInfoObject.get("type").getAsString(), modelInfoObject.get("size").getAsInt()));
+            }
             students.add(new Student(studentInfoObject.get("name").getAsString(), studentInfoObject.get("department").getAsString(),
-                    studentInfoObject.get("status").getAsString(), 0, 0));
+                    studentInfoObject.get("status").getAsString(), models, 0, 0));
+
         }
 
         return new CRMSRunner.InputInfo(students, conferences, duration, ticks, gpus, cpus);

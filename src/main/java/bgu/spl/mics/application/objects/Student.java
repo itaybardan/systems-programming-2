@@ -1,5 +1,7 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.ArrayList;
+
 /**
  * Passive object representing single student.
  * Add fields and methods to this class as you see fit (including public methods and constructors).
@@ -31,6 +33,7 @@ public class Student {
     private Degree status;
     private int publications;
     private int papersRead;
+    private ArrayList<Model> models;
 
 
     public void setName(String name) {
@@ -69,11 +72,12 @@ public class Student {
         this.papersRead = papersRead;
     }
 
-    public Student(String name, String department, String status, int publications, int papersRead) {
+    public Student(String name, String department, String status, ArrayList<Model> models, int publications, int papersRead) {
         this.name = name;
         this.department = department;
         this.status = searchEnum(Degree.class, status);
         this.publications = publications;
         this.papersRead = papersRead;
+        this.models = models;
     }
 }
