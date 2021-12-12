@@ -19,7 +19,7 @@ package bgu.spl.mics;
  * <p>
  */
 public abstract class MicroService implements Runnable {
-    protected Class<? extends Event> eventSubType;
+    protected Class<? extends Event<?>> eventSubType;
     protected Class<? extends Broadcast> broadcastSubType;
     private boolean terminated = false;
     private final String name;

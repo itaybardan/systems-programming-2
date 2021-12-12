@@ -13,6 +13,9 @@ public class GPU {
     /**
      * @inv getAvailableProcessedDataSpace() >= 0
      */
+    public GPU(String type) {
+        this.type = Type.valueOf(type);
+    }
 
     enum Type {RTX3090, RTX2080, GTX1080}
 
@@ -26,6 +29,7 @@ public class GPU {
         put(Type.RTX2080, 16);
         put(Type.GTX1080, 8);
     }};
+
     private Type type;
     private Model model;
     private Cluster cluster;
