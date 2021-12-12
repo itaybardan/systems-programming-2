@@ -1,9 +1,11 @@
-package bgu.spl.mics.application.events;
+package bgu.spl.mics.application.messages;
 import bgu.spl.mics.Event;
 import bgu.spl.mics.Future;
 
-public class TestModelEvent implements Event<String> {
-    public TestModelEvent(){
+public class PublishResultsEvent implements Event<String> {
+    public PublishResultsEvent(){
+        super();
+
     }
     @Override
     public Future<String> getFuture() {

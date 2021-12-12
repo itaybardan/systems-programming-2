@@ -1,13 +1,19 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.Locale;
+
 /**
  * Passive object representing a Deep Learning model.
  * Add all the fields described in the assignment as private fields.
  * Add fields and methods to this class as you see fit (including public methods and constructors).
  */
+enum ModelType{
+    images, tabular, text
+}
+
 public class Model {
     private String name;
-    private String type;
+    private ModelType type;
     private int size;
 
     public String getName() {
@@ -18,13 +24,7 @@ public class Model {
         this.name = name;
     }
 
-    public String getType() {
-        return type;
-    }
 
-    public void setType(String type) {
-        this.type = type;
-    }
 
     public int getSize() {
         return size;
@@ -36,7 +36,7 @@ public class Model {
 
     public Model(String name, String type, int size) {
         this.name = name;
-        this.type = type;
+        this.type = ModelType.valueOf(type.toLowerCase(Locale.ROOT));
         this.size = size;
     }
 }

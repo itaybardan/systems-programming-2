@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.objects;
 
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Passive object representing single student.
@@ -31,8 +32,8 @@ public class Student {
     private String name;
     private String department;
     private Degree status;
-    private int publications;
-    private int papersRead;
+    private AtomicInteger publications = new AtomicInteger(0);
+    private AtomicInteger papersRead = new AtomicInteger(0);
     private ArrayList<Model> models;
 
 
@@ -56,28 +57,13 @@ public class Student {
         this.status = status;
     }
 
-    public int getPublications() {
-        return publications;
-    }
-
-    public void setPublications(int publications) {
-        this.publications = publications;
-    }
-
-    public int getPapersRead() {
-        return papersRead;
-    }
-
-    public void setPapersRead(int papersRead) {
-        this.papersRead = papersRead;
-    }
 
     public Student(String name, String department, String status, ArrayList<Model> models, int publications, int papersRead) {
         this.name = name;
         this.department = department;
         this.status = searchEnum(Degree.class, status);
-        this.publications = publications;
-        this.papersRead = papersRead;
+        this.publications.set(publications);
+        this.papersRead.set(papersRead);
         this.models = models;
     }
 }
