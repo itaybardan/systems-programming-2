@@ -5,6 +5,7 @@ import org.apache.commons.lang3.tuple.MutablePair;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -19,23 +20,27 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MessageBusImpl implements MessageBus {
 
     private static MessageBusImpl instance;
-    private Map<Class<? extends Event>, MutablePair<LinkedList<MicroService>, AtomicInteger>> event_subscribers = new ConcurrentHashMap<>(); //READ BELOW
+    private Map<Class<? extends Event>, MutablePair<CopyOnWriteArrayList<MicroService>, AtomicInteger>> event_subscribers; //READ BELOW
     //this hashmap will contain all the event classes, and for each, a pair of:all the subscribed microservices for that event class,
     //and the counter needed for the round-robin implementation.
 
-    private Map<Class<? extends Broadcast>, LinkedList<MicroService>> broadcast_subscribers = new ConcurrentHashMap<>();
+    private Map<Class<? extends Broadcast>, CopyOnWriteArrayList<MicroService>> broadcast_subscribers;
 
-    private Map<MicroService, LinkedList<Message>> messagesQueue = new ConcurrentHashMap<>();
+    private Map<MicroService, CopyOnWriteArrayList<Message>> messagesQueue;
 
+    private static class MessageBusHolder {
+        private static MessageBusImpl messageBusInstance = new MessageBusImpl();
 
+    }
     private MessageBusImpl() {
+        event_subscribers = new ConcurrentHashMap<>();
+        broadcast_subscribers = new ConcurrentHashMap<>();
+        messagesQueue = new ConcurrentHashMap<>();
     }
 
 
     public static MessageBusImpl getInstance() {
-        if (instance == null)
-            instance = new MessageBusImpl();
-        return instance;
+        return MessageBusHolder.messageBusInstance;
     }
 
 
@@ -75,15 +80,15 @@ public class MessageBusImpl implements MessageBus {
     //Methods
     @Override
     public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-        MutablePair<LinkedList<MicroService>, AtomicInteger> temp_pair;
+        MutablePair<CopyOnWriteArrayList<MicroService>, AtomicInteger> temp_pair;
         if (!event_subscribers.containsKey(type)) { //The event is not registered yet in the map.
-            temp_pair = new MutablePair<>(new LinkedList<>(), new AtomicInteger(0)); // counter represents the current micro service to give an event
+            temp_pair = new MutablePair<>(new CopyOnWriteArrayList<>(), new AtomicInteger(0)); // counter represents the current micro service to give an event
             temp_pair.getKey().add(m); //Add the micro service to the list that represents all the subscribed micro services for this event type
             event_subscribers.put(type, temp_pair);
 
         } else {
 
-            LinkedList<MicroService> temp_array = event_subscribers.get(type).getKey(); //The event exists and is already initialized in the map.
+            CopyOnWriteArrayList<MicroService> temp_array = event_subscribers.get(type).getKey(); //The event exists and is already initialized in the map.
             temp_array.add(m);
 
         }
@@ -92,9 +97,9 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-        LinkedList<MicroService> temp_array;
+        CopyOnWriteArrayList<MicroService> temp_array;
         if (!broadcast_subscribers.containsKey(type)) { //The broadcast is not registered yet in the map.
-            temp_array = new LinkedList<>();
+            temp_array = new CopyOnWriteArrayList<>();
             temp_array.add(m);
             broadcast_subscribers.put(type, temp_array);
 
@@ -126,7 +131,7 @@ public class MessageBusImpl implements MessageBus {
         if (!event_subscribers.containsKey(type))
             return null;
 
-        LinkedList<MicroService> microServiceslist = event_subscribers.get(type).getKey();
+        CopyOnWriteArrayList<MicroService> microServiceslist = event_subscribers.get(type).getKey();
         int counter = event_subscribers.get(type).getValue().get();
         messagesQueue.get(microServiceslist.get(counter)).add(e);
         event_subscribers.get(type).getValue().set((counter + 1) % (event_subscribers.get(type).getKey().size())); //increase the counter
@@ -141,7 +146,7 @@ public class MessageBusImpl implements MessageBus {
     @Override
     public void register(MicroService m) {
         if (messagesQueue.containsKey(m)) return; //This micro service is already implemented, do nothing.
-        messagesQueue.put(m, new LinkedList<>());
+        messagesQueue.put(m, new CopyOnWriteArrayList<>());
 
     }
 
