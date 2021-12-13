@@ -38,11 +38,11 @@ public class CRMSRunner {
 
     public static void main(String[] args) {
         InputInfo inputInfo = parseJsonInputFile();
-        ArrayList<? extends MicroService> microServices = createMicroServices(inputInfo);
+        ArrayList<MicroService> microServices = createMicroServices(inputInfo);
         initMicroServices(microServices);
     }
 
-    private static ArrayList<? extends MicroService> createMicroServices(InputInfo inputInfo) {
+    private static ArrayList<MicroService> createMicroServices(InputInfo inputInfo) {
         ArrayList<MicroService> microServices = new ArrayList<>();
         for (Student student : inputInfo.students) {
             microServices.add(new StudentService(student.getName(), student));
