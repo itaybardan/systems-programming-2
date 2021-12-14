@@ -1,6 +1,8 @@
 package bgu.spl.mics.application.objects;
 
 
+import bgu.spl.mics.MessageBusImpl;
+
 import java.util.ArrayList;
 
 /**
@@ -11,15 +13,20 @@ import java.util.ArrayList;
  * Add fields and methods to this class as you see fit (including public methods and constructors).
  */
 public class Cluster {
-	private ArrayList<GPU> gpus;
-	private ArrayList<CPU> cpus;
+    private ArrayList<GPU> gpus;
+    private ArrayList<CPU> cpus;
 
-	/**
+    private static class ClusterInstanceHolder {
+        private static final Cluster clusterInstance = new Cluster();
+
+    }
+
+    /**
      * Retrieves the single instance of this class.
      */
-	public static Cluster getInstance() {
-		//TODO: Implement this
-		return null;
-	}
+    public static Cluster getInstance() {
+        return Cluster.ClusterInstanceHolder.clusterInstance;
+    }
+
 
 }

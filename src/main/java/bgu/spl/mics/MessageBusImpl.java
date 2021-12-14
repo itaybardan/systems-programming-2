@@ -171,22 +171,22 @@ public class MessageBusImpl implements MessageBus {
                 broadcast_subscribers.get(type).remove(m);
             }
         }
-        messagesQueue.remove(m); //Finally, remove the message queue of said micro service.
+        messagesQueue.remove(m); //Finally, remove the message queue of said microservice.
 
 
     }
 
     @Override
-    public Message awaitMessage(MicroService m) throws InterruptedException { //TODO find a better way than synchronized that can use wait() func
+    public Message awaitMessage(MicroService m) { //TODO find a better way than synchronized that can use wait() func
 
         synchronized (m) {
             if (!messagesQueue.containsKey(m)) throw new IllegalStateException(); // this microservice does not exist
 
             if (messagesQueue.get(m).size() == 0) {
                 try {
-                    wait(); // will be notified when it gets an message. no need to be in a while loop since only this method can remove from m's queue
+                    wait(); // will be notified when it gets a message. no need to be in a while loop since only this method can remove from m's queue
                 } catch (InterruptedException e) {
-                    throw e;
+                    e.printStackTrace();
                 }
             }
             return messagesQueue.get(m).remove(0);

@@ -16,7 +16,7 @@ import java.util.ArrayList;
  * message-queue (see {@link MessageBus#register(bgu.spl.mics.MicroService)}
  * method). The abstract MicroService stores this callback together with the
  * type of the message is related to.
- * 
+ *
  * Only private fields and methods may be added to this class.
  * <p>
  */
@@ -91,7 +91,7 @@ public abstract class MicroService implements Runnable {
      * @param type     The {@link Class} representing the type of broadcast
      *                 message to subscribe to.
      * @param callback The callback that should be called when messages of type
-     *                 {@code type} are taken from this micro-service message
+     *                 {@code type} are taken from this microservice message
      *                 queue.
      */
     protected final <B extends Broadcast> void subscribeBroadcast(Class<B> type, Callback<B> callback) {
@@ -168,8 +168,12 @@ public abstract class MicroService implements Runnable {
     public final void run() {
         initialize();
         while (!terminated) {
-            System.out.println("test");
+            Message message = MessageBusImpl.getInstance().awaitMessage(this);
         }
+    }
+
+    public void setTerminated(boolean newValue) {
+        this.terminated = newValue;
     }
 
 }
