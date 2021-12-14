@@ -11,12 +11,22 @@ package bgu.spl.mics;
  */
 public interface MessageBus {
 
+    //Queries
+    public boolean isEventSubsEmpty(Class<? extends Event> type);
+    public boolean isBroadcastSubsEmpty(Class<? extends Broadcast> type);
+    public boolean isRegistered(MicroService m);
+    public boolean isEventProcessed(Event event); //is the event in the message queue of a microservice
+    public boolean isBroadcastProcessed(Broadcast broadcast);
+
     /**
      * Subscribes {@code m} to receive {@link Event}s of type {@code type}.
      * <p>
      * @param <T>  The type of the result expected by the completed event.
      * @param type The type to subscribe to,
      * @param m    The subscribing micro-service.
+     *
+     * @PRE: m </< event_subscribers.get(type).getKey()
+     * @POST: m < event_subscribers.get(type).getKey()
      */
     <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m);
 
@@ -25,6 +35,9 @@ public interface MessageBus {
      * <p>
      * @param type 	The type to subscribe to.
      * @param m    	The subscribing micro-service.
+     *
+     * @PRE: m </< broadcast_subscribers.get(type)
+     * @POST:m < broadcast_subscribers.get(type)
      */
     void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m);
 
@@ -37,6 +50,9 @@ public interface MessageBus {
      * @param <T>    The type of the result expected by the completed event.
      * @param e      The completed event.
      * @param result The resolved result of the completed event.
+     *
+     * @PRE e.getFuture().get(1, TimeUnit.MILLISECONDS) == null
+     * @POST e.getFuture.get() == result
      */
     <T> void complete(Event<T> e, T result);
 
@@ -45,6 +61,9 @@ public interface MessageBus {
      * micro-services subscribed to {@code b.getClass()}.
      * <p>
      * @param b 	The message to added to the queues.
+     *
+     *
+     * @POST: V MicroService m < messagesQueue.keySet() (m < broadcast_subscribers.get(b.getClass())  -->>  b < messagesQueue.get(m) )
      */
     void sendBroadcast(Broadcast b);
 
@@ -57,6 +76,8 @@ public interface MessageBus {
      * @param e     	The event to add to the queue.
      * @return {@link Future<T>} object to be resolved once the processing is complete,
      * 	       null in case no micro-service has subscribed to {@code e.getClass()}.
+     *
+     * 	@POST: E MicroService m < messagesQueue.keySet()  (m < event.subscribers.get(e.getClass()) &&  e < messagesQueue.get(m) )
      */
     <T> Future<T> sendEvent(Event<T> e);
 
@@ -64,6 +85,7 @@ public interface MessageBus {
      * Allocates a message-queue for the {@link MicroService} {@code m}.
      * <p>
      * @param m the micro-service to create a queue for.
+     * @POST: m < messagesQueue.keySet()
      */
     void register(MicroService m);
 
@@ -74,6 +96,9 @@ public interface MessageBus {
      * registered, nothing should happen.
      * <p>
      * @param m the micro-service to unregister.
+     * @POST: V Pair pair < event_subscribers.valueSet() (m </< pair.getKey()) &&
+     *        V LinkedList list < event_subscribers.valueSet() ( m </< list ) &&
+     *        m </< messagesQueue.keySet()
      */
     void unregister(MicroService m);
 
@@ -93,5 +118,9 @@ public interface MessageBus {
      *                              to became available.
      */
     Message awaitMessage(MicroService m) throws InterruptedException;
-    
+
+
+
+
+
 }

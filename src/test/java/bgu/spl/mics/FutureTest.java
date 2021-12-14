@@ -1,92 +1,135 @@
 package bgu.spl.mics;
 
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 
-@RunWith(JUnitParamsRunner.class)
 public class FutureTest {
-    private Future<Object> future;
+
+    Future<Object> future;
+
+    Object object; // Will reference the current object held in future
+
+    Object wantedObject; //Will reference the wanted result
+
+
+    Thread resolve_thread;
+    Thread thread_second;
+
+    int timeout_test;
+    TimeUnit timeUnit_test;
 
 
     @Before
-    public void setUp() throws Exception {
-        this.future = new Future<Object>();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-    }
-
-    @SuppressWarnings("unused")
-    private Object[] waitTimeUnitsParameters() {
-        return new Object[]{1000, 10, 2, 100};
-    }
-
-    @Test
-    @Parameters(method = "waitTimeUnitsParameters")
-    public void testGetTimeoutIsNotSurpass(long waitTimeUnits) {
-        long startTime = System.nanoTime();
-        this.future.get(waitTimeUnits, TimeUnit.NANOSECONDS);
-        long endTime = System.nanoTime();
-        assertTrue(endTime - startTime > waitTimeUnits);
+    public void setUp() {
+        wantedObject = "something";
+        timeout_test = 100;
+        timeUnit_test = TimeUnit.MILLISECONDS;
+        resolve_thread = new Thread(() -> {
+            future.resolve(wantedObject);
+        });
+        thread_second = new Thread(() -> {
+            object = future.get(1, timeUnit_test);
+        });
 
     }
 
     @Test
-    public void testResolve() {
-        Object result = new Object();
-        this.future.resolve(result);
-        assertTrue(this.future.isDone());
-        assertNotNull(this.future.get());
-    }
+    public void TestGet() { //TODO: implement a different approach, maybe nest a new runnable inside the thread in order to catch the "IllegalMonitorStateException" exception.
+        object = null;
+        future = new Future<>();
+        Runnable runnable = () -> {
+            object = future.get();
+        }; //no time limit
+        Thread thread = new Thread(runnable);
 
-    @SuppressWarnings("unused")
-    private Object[] parametersForTestIsDone() {
-        return new Object[]{new Object(), "hello", "world"};
+        thread.start();
+
+        Object temp = object;
+        assertEquals(null, temp);
+
+        resolve_thread.start();
+        try {
+            thread.join();
+            resolve_thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        assertEquals(wantedObject, object);
+
     }
 
     @Test
-    @Parameters(method = "parametersForTestIsDone")
-    public void testIsDone(Object result) {
-        this.future = new Future<>();
-        assertFalse(this.future.isDone());
-        this.future.resolve(result);
-        assertTrue(this.future.isDone());
-        assertNotNull(this.future.get());
+    public void TestGetEmpty() {
+        future = new Future<>();
+
+        thread_second.start();
+
+        try {
+            thread_second.join();
+        } catch (InterruptedException e) {
+        }
+
+        assertEquals(null, object);
+
+
+        resolve_thread.start();
+        Thread thread1 = new Thread(() -> {
+            object = future.get(10, timeUnit_test);
+        });
+        thread1.start();
+        try {
+            thread1.join();
+        } catch (InterruptedException e) {
+        }
+        assertEquals(wantedObject, object);
+    }
+
+
+    @Test
+    public void TestResolve() {
+        object = null;
+        future = new Future<>();
+        Thread thread = new Thread(() -> {
+            future.resolve(null);
+        });
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+        }
+
+        thread_second.start();
+        try {
+            thread_second.join();
+        } catch (InterruptedException e) {
+        }
+
+
+        assertEquals(null, object);
+
+        Thread thread_second_V2 = new Thread(() -> {
+            future.resolve(wantedObject);
+        });
+        thread_second_V2.start();
+        try {
+            thread_second_V2.join();
+        } catch (InterruptedException e) {
+        }
+
+        assertEquals(wantedObject, future.get());
     }
 
     @Test
-    @Parameters(method = "waitTimeUnitsParameters")
-    public void testGet(final long waitTimeUnits) {
-        long startTime = System.nanoTime();
-        this.future = new Future<Object>();
-        final Object result = new Object();
-        Thread resolver = new Thread() {
-            private final long _waitTimeUnits = waitTimeUnits;
-            private final Object _result = result;
-
-            public void run() {
-                try {
-                    TimeUnit.NANOSECONDS.sleep(this._waitTimeUnits);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                future.resolve(this._result);
-            }
-        };
-        resolver.start();
-        future.get();
-        long endTime = System.nanoTime();
-        assertTrue(endTime - startTime > waitTimeUnits);
-        assertTrue(future.isDone());
+    public void TestIsDOne() {
+        future = new Future<>();
+        assertEquals(false, future.isDone());
+        future.resolve(wantedObject);
+        assertEquals(true, future.isDone());
     }
 }

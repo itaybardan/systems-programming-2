@@ -6,11 +6,5 @@ package bgu.spl.mics.application.objects;
  */
 
 public class DataBatch {
-    public static int size = 1000;
-    private Data data;
-    private int startIndex;
-
-    public Data getData() {
-        return this.data;
-    }
+    
 }

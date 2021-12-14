@@ -8,62 +8,41 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Add fields and methods to this class as you see fit (including public methods and constructors).
  */
 public class Student {
-
-    public static <T extends Enum<?>> T searchEnum(Class<T> enumeration, String search) {
-        for (T each : enumeration.getEnumConstants()) {
-            if (each.name().compareToIgnoreCase(search) == 0) {
-                return each;
-            }
-        }
-        return null;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
     /**
      * Enum representing the Degree the student is studying for.
      */
-    enum Degree {
+    public enum Degree {
         MSc, PhD
     }
 
-    private String name;
-    private String department;
-    private Degree status;
-    private AtomicInteger publications = new AtomicInteger(0);
-    private AtomicInteger papersRead = new AtomicInteger(0);
+    private final String name;
+    private final String department;
+    private final Degree status;
+    private AtomicInteger publications; //these values need to be updates instantly.
+    private AtomicInteger papersRead;
     private ArrayList<Model> models;
 
-
-    public void setName(String name) {
-        this.name = name;
+    public Student(String _name, String _department, Degree _status, ArrayList<Model> _models) {
+        name = _name;
+        department = _department;
+        status = _status;
+        publications = new AtomicInteger(0);
+        papersRead = new AtomicInteger(0); // All papers publicized except papers that belong to this Student.
+        models = _models;
+    }
+    public ArrayList<Model> getModels(){
+        return models;
+    }
+    public String getName(){
+        return name;
     }
 
-    public String getDepartment() {
-        return department;
+    public void incrementPublifications(int amount){
+        publications.set(publications.get()+amount);
     }
-
-    public void setDepartment(String department) {
-        this.department = department;
-    }
-
-    public Degree getStatus() {
-        return status;
-    }
-
-    public void setStatus(Degree status) {
-        this.status = status;
+    public void incrementPapersRead(int amount){ //The amount excluding this student's publications will be calculated in service
+        papersRead.set(papersRead.get()+amount);
     }
 
 
-    public Student(String name, String department, String status, ArrayList<Model> models, int publications, int papersRead) {
-        this.name = name;
-        this.department = department;
-        this.status = searchEnum(Degree.class, status);
-        this.publications.set(publications);
-        this.papersRead.set(papersRead);
-        this.models = models;
-    }
 }

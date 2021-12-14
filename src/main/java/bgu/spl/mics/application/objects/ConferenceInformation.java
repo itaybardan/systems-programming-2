@@ -1,32 +1,27 @@
 package bgu.spl.mics.application.objects;
 
+
+import java.util.concurrent.CopyOnWriteArrayList;
+
 /**
  * Passive object representing information on a conference.
  * Add fields and methods to this class as you see fit (including public methods and constructors).
  */
 public class ConferenceInformation {
-
     private String name;
     private int date;
 
-    public ConferenceInformation(String name, int date) {
-        this.name = name;
-        this.date = date;
+    private CopyOnWriteArrayList<Model> publishes;
+
+    public ConferenceInformation(String _name, int _date){
+        name = _name;
+        date = _date;
+        publishes = new CopyOnWriteArrayList<>();
     }
 
-    public String getName() {
-        return name;
+    public void addPublish(Model model){
+        publishes.add(model);
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
 
-    public int getDate() {
-        return date;
-    }
-
-    public void setDate(int date) {
-        this.date = date;
-    }
 }

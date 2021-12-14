@@ -8,7 +8,8 @@ package bgu.spl.mics;
  * Round-Robin fashion.
  */
 public interface Event<T> extends Message {
-    public Future<T> getFuture();
 
-    public void setFuture(Future<T> future);
+
+    Future<T> getFuture();
+    void setFuture(Future<T> future);
 }
