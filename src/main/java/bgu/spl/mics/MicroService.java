@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Set;
 
 /**
- * The MicroService is an abstract class that any micro-service in the system
+ * The MicroService is an abstract class that any microservice in the system
  * must extend. The abstract MicroService class is responsible to get and
  * manipulate the singleton {@link MessageBus} instance.
  * <p>
@@ -16,31 +16,29 @@ import java.util.Set;
  * {@link #sendBroadcast(bgu.spl.mics.Broadcast)}, {@link #sendBroadcast(bgu.spl.mics.Broadcast)},
  * etc.) they can use. When subscribing to message-types,
  * the derived class also supplies a {@link Callback} that should be called when
- * a message of the subscribed type was taken from the micro-service
+ * a message of the subscribed type was taken from the microservice
  * message-queue (see {@link MessageBus#register(bgu.spl.mics.MicroService)}
  * method). The abstract MicroService stores this callback together with the
  * type of the message is related to.
+ *
  * <p>
  * Only private fields and methods may be added to this class.
  * <p>
  */
 public abstract class MicroService implements Runnable {
-
-    //Fields
-
     protected boolean terminated = false;
     protected final String name;
 
-    protected MessageBusImpl messageBus = MessageBusImpl.getInstance();
+    protected final MessageBusImpl messageBus = MessageBusImpl.getInstance();
 
-    protected HashMap<Class<? extends Message>, Callback> messages_callbacks;
+    protected final HashMap<Class<? extends Message>, Callback> messages_callbacks;
 
 
     protected Event task; //Services that have their own tasks will use it via it's future.
 
 
     /**
-     * @param name the micro-service name (used mainly for debugging purposes -
+     * @param name the microservice name (used mainly for debugging purposes -
      *             does not have to be unique)
      */
     public MicroService(String name) {
@@ -68,7 +66,7 @@ public abstract class MicroService implements Runnable {
      * @param type     The {@link Class} representing the type of event to
      *                 subscribe to.
      * @param callback The callback that should be called when messages of type
-     *                 {@code type} are taken from this micro-service message
+     *                 {@code type} are taken from this microservice message
      *                 queue.
      */
     protected final <T, E extends Event<T>> void subscribeEvent(Class<E> type, Callback<E> callback) {
@@ -94,7 +92,7 @@ public abstract class MicroService implements Runnable {
      * @param type     The {@link Class} representing the type of broadcast
      *                 message to subscribe to.
      * @param callback The callback that should be called when messages of type
-     *                 {@code type} are taken from this micro-service message
+     *                 {@code type} are taken from this microservice message
      *                 queue.
      */
     protected final <B extends Broadcast> void subscribeBroadcast(Class<B> type, Callback<B> callback) {
@@ -112,8 +110,8 @@ public abstract class MicroService implements Runnable {
      *            {@code e}
      * @param e   The event to send
      * @return {@link Future<T>} object that may be resolved later by a different
-     * micro-service processing this event.
-     * null in case no micro-service has subscribed to {@code e.getClass()}.
+     * microservice processing this event.
+     * null in case no microservice has subscribed to {@code e.getClass()}.
      */
     protected final <T> Future<T> sendEvent(Event<T> e) {
         return messageBus.sendEvent(e);
@@ -167,7 +165,7 @@ public abstract class MicroService implements Runnable {
     }
 
     /**
-     * The entry point of the micro-service. TODO: you must complete this code
+     * The entry point of the microservice. TODO: you must complete this code
      * otherwise you will end up in an infinite loop.
      */
     @Override

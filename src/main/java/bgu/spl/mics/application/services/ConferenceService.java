@@ -3,11 +3,9 @@ package bgu.spl.mics.application.services;
 import bgu.spl.mics.Callback;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.broadcasts.PublishConferenceBroadcast;
-import bgu.spl.mics.application.broadcasts.TerminateBroadcast;
 import bgu.spl.mics.application.broadcasts.TickBroadcast;
 import bgu.spl.mics.application.events.PublishResultsEvent;
 import bgu.spl.mics.application.objects.ConferenceInformation;
-import jdk.nashorn.internal.codegen.CompilerConstants;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -22,14 +20,14 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class ConferenceService extends MicroService {
 
-    private ConferenceInformation conference;
+    private final ConferenceInformation conference;
     private final int startTime;
-    private AtomicInteger currentTime;
+    private final AtomicInteger currentTime;
 
-    public ConferenceService(String name, ConferenceInformation _conference, int _startTime) { //startTime will be calculated in advance in main, by previousConference's conferenceDate
+    public ConferenceService(String name, ConferenceInformation _conference, int startTime) { //startTime will be calculated in advance in main, by previousConference's conferenceDate
         super(name);
         conference = _conference;
-        startTime = _startTime; // = prevConference.conferenceDate / tickTime || 1 if it's the first conference, startTime <= program duration
+        this.startTime = startTime; // = prevConference.conferenceDate / tickTime || 1 if it's the first conference, startTime <= program duration
         currentTime = new AtomicInteger(1);
     }
 
@@ -52,7 +50,7 @@ public class ConferenceService extends MicroService {
         Callback<TickBroadcast> tickCallback = (TickBroadcast b) ->{
           currentTime.set(b.time);
           if(currentTime.get() >= conference.getDate()){
-              sendBroadcast(new PublishConferenceBroadcast(conference.getAmmountOfPublishes(), conference.getPublishes()));
+              sendBroadcast(new PublishConferenceBroadcast(conference.getAmountOfPublishes(), conference.getPublishes()));
               terminate();
           }
         };

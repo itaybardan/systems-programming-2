@@ -5,7 +5,7 @@ import bgu.spl.mics.application.objects.Model;
 import bgu.spl.mics.application.objects.ModelStatus;
 
 public class TestModelEvent implements Event<ModelStatus> {
-    private Model model;
+    private final Model model;
 
     public TestModelEvent(Model _model){
         model = _model;

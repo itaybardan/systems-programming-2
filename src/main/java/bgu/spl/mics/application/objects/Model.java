@@ -1,5 +1,6 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Model {
@@ -12,17 +13,26 @@ public class Model {
         Untested, Tested
     }
 
-    private AtomicReference<TestStatus> testStatus;
-    private AtomicReference<ModelStatus> modelStatus;
+    private final AtomicReference<TestStatus> testStatus;
+    private final AtomicReference<ModelStatus> modelStatus;
 
 
-    public  Model(String _name, ModelType _type, int _size){
-        name = _name;
-        type = _type;
-        size = _size;
+    public  Model(String name, ModelType type, int size){
+        this.name = name;
+        this.type = type;
+        this.size = size;
         testStatus = new AtomicReference<>(TestStatus.Untested);
         modelStatus = new AtomicReference<>(ModelStatus.Undecided);
     }
+
+    public  Model(String name, String type, int size){
+        this.name = name;
+        this.type = ModelType.valueOf(type.toLowerCase(Locale.ROOT));
+        this.size = size;
+        testStatus = new AtomicReference<>(TestStatus.Untested);
+        modelStatus = new AtomicReference<>(ModelStatus.Undecided);
+    }
+
     public String getName() {
         return name;
     }

@@ -1,6 +1,5 @@
 package bgu.spl.mics.application.objects;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import bgu.spl.mics.application.objects.CPU;
@@ -12,8 +11,8 @@ public class CPUTest {
     private CPU cpu;
 
     @Before
-    public void setUp() throws Exception {
-        this.cpu = new CPU(1);
+    public void setUp() {
+        this.cpu = new CPU(0, Cluster.getInstance());
     }
 
     @Test

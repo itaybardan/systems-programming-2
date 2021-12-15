@@ -9,7 +9,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class PublishConferenceBroadcast implements Broadcast {
     private final int publishesAmount;
-    private CopyOnWriteArrayList<Model> publishes;
+    private final CopyOnWriteArrayList<Model> publishes;
 
     public PublishConferenceBroadcast(int amm, CopyOnWriteArrayList<Model> _publishes){
         publishesAmount = amm;

@@ -9,7 +9,7 @@ import bgu.spl.mics.example.messages.ExampleEvent;
 
 public class ExampleMessageSenderService extends MicroService {
 
-    private boolean broadcast;
+    private final boolean broadcast;
 
     public ExampleMessageSenderService(String name, String[] args) {
         super(name);
@@ -29,7 +29,7 @@ public class ExampleMessageSenderService extends MicroService {
             System.out.println("Sender " + getName() + " publish an event and terminate");
             terminate();
         } else {
-            Future<String> futureObject = (Future<String>)sendEvent(new ExampleEvent(getName()));
+            Future<String> futureObject = sendEvent(new ExampleEvent(getName()));
             if (futureObject != null) {
             	String resolved = futureObject.get(100, TimeUnit.MILLISECONDS);
             	if (resolved != null) {

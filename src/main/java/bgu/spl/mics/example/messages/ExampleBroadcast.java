@@ -4,7 +4,7 @@ import bgu.spl.mics.Broadcast;
 
 public class ExampleBroadcast implements Broadcast {
 
-    private String senderId;
+    private final String senderId;
 
     public ExampleBroadcast(String senderId) {
         this.senderId = senderId;

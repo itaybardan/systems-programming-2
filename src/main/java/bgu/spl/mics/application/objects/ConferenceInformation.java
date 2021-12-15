@@ -12,28 +12,35 @@ public class ConferenceInformation {
     private final String name;
     private final int date;
 
-    private AtomicInteger amount;
-    private CopyOnWriteArrayList<Model> publishes;
+    private final AtomicInteger amount;
+    private final CopyOnWriteArrayList<Model> publishes;
 
-    public ConferenceInformation(String _name, int _date){
+    public ConferenceInformation(String _name, int _date) {
         name = _name;
         date = _date;
         amount = new AtomicInteger(0);
         publishes = new CopyOnWriteArrayList<>();
     }
 
-    public int getDate(){ return date;}
-    public CopyOnWriteArrayList<Model> getPublishes(){
+    public int getDate() {
+        return date;
+    }
+
+    public CopyOnWriteArrayList<Model> getPublishes() {
         return publishes;
     }
-    public int getAmmountOfPublishes(){
+
+    public int getAmountOfPublishes() {
         return amount.get();
     }
 
-    public void addPublish(Model model){
+    public void addPublish(Model model) {
         amount.addAndGet(1);
         publishes.add(model);
     }
 
+    public String getName() {
+        return this.name;
+    }
 
 }

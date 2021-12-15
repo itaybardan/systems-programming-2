@@ -1,9 +1,18 @@
 package bgu.spl.mics.application.messages;
 import bgu.spl.mics.Event;
 import bgu.spl.mics.Future;
+import bgu.spl.mics.application.objects.Model;
+import bgu.spl.mics.application.objects.Student;
 
 public class TrainModelEvent implements Event<String> {
-    public TrainModelEvent(){
+    public final Model model;
+    public final Student student;
+    public final Future<Model> future;
+
+    public TrainModelEvent(Model model, Student student, Future<Model> future){
+        this.model = model;
+        this.student = student;
+        this.future = future;
     }
     @Override
     public Future<String> getFuture() {

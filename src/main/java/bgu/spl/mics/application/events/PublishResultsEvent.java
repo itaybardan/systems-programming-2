@@ -4,7 +4,7 @@ import bgu.spl.mics.Future;
 import bgu.spl.mics.application.objects.Model;
 
 public class PublishResultsEvent implements Event<String> {
-    private Model model;
+    private final Model model;
 
     public PublishResultsEvent(Model _model){ //Conference will receive this event and increment needed values to the student
         super();

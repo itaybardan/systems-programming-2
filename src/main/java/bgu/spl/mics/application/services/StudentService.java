@@ -3,9 +3,9 @@ package bgu.spl.mics.application.services;
 import bgu.spl.mics.Callback;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.broadcasts.PublishConferenceBroadcast;
-import bgu.spl.mics.application.events.TrainModelEvent;
-import bgu.spl.mics.application.events.TestModelEvent;
 import bgu.spl.mics.application.events.PublishResultsEvent;
+import bgu.spl.mics.application.events.TestModelEvent;
+import bgu.spl.mics.application.events.TrainModelEvent;
 import bgu.spl.mics.application.objects.Model;
 import bgu.spl.mics.application.objects.ModelStatus;
 import bgu.spl.mics.application.objects.Student;
@@ -21,26 +21,23 @@ import bgu.spl.mics.application.objects.Student;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class StudentService extends MicroService {
-    private Student student;
+    private final Student student;
     private int currentModelIndex;
 
 
-    public StudentService(Student _student) {
-        super(_student.getName()); //Service and object will share the same name
-        student = _student;
+    public StudentService(Student student) {
+        super(student.getName()); // service and object will share the same name
+        this.student = student;
         currentModelIndex = 0;
     }
 
     @Override
     protected void initialize() {
-
-
         messageBus.register(this);
-
 
         //Setting up Callbacks
         Callback<PublishConferenceBroadcast> publishConferenceCallback = (PublishConferenceBroadcast b) -> {
-            student.incrementPublifications(b.getPublishes(student.getModels()));
+            student.incrementPublications(b.getPublishes(student.getModels()));
             student.incrementPapersRead(b.getPapersRead(student.getModels()));
         };
 
@@ -61,7 +58,7 @@ public class StudentService extends MicroService {
                 publishResultsEvent.setFuture(sendEvent(publishResultsEvent));
             }
 
-            if(++currentModelIndex < student.getModels().size()){ //Will send TrainModel for the next model if there is one
+            if (++currentModelIndex < student.getModels().size()) { //Will send TrainModel for the next model if there is one
                 task = new TrainModelEvent(student.getModels().get(currentModelIndex));
                 task.setFuture(messageBus.sendEvent(task));
             }
@@ -77,7 +74,7 @@ public class StudentService extends MicroService {
 
         //Sending the first TrainModel
         Model firstModel = student.getModels().get(0);
-        if(firstModel != null) {
+        if (firstModel != null) {
             TrainModelEvent trainModelEvent = new TrainModelEvent(firstModel);
             trainModelEvent.setFuture(sendEvent(trainModelEvent));
             task = trainModelEvent;

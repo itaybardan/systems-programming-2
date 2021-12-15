@@ -4,7 +4,7 @@ import bgu.spl.mics.Event;
 import bgu.spl.mics.Future;
 
 public class FinishEvent implements Event<Event> {
-    Event<Event> finishedEvent;
+    final Event<Event> finishedEvent;
     Future<Event> future;
     public FinishEvent(Event<Event> e){
         finishedEvent=e;

@@ -5,7 +5,7 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 
 public class FutureTest {
@@ -29,12 +29,8 @@ public class FutureTest {
         wantedObject = "something";
         timeout_test = 100;
         timeUnit_test = TimeUnit.MILLISECONDS;
-        resolve_thread = new Thread(() -> {
-            future.resolve(wantedObject);
-        });
-        thread_second = new Thread(() -> {
-            object = future.get(1, timeUnit_test);
-        });
+        resolve_thread = new Thread(() -> future.resolve(wantedObject));
+        thread_second = new Thread(() -> object = future.get(1, timeUnit_test));
 
     }
 
@@ -42,15 +38,13 @@ public class FutureTest {
     public void TestGet() { //TODO: implement a different approach, maybe nest a new runnable inside the thread in order to catch the "IllegalMonitorStateException" exception.
         object = null;
         future = new Future<>();
-        Runnable runnable = () -> {
-            object = future.get();
-        }; //no time limit
+        Runnable runnable = () -> object = future.get(); //no time limit
         Thread thread = new Thread(runnable);
 
         thread.start();
 
         Object temp = object;
-        assertEquals(null, temp);
+        assertNull(temp);
 
         resolve_thread.start();
         try {
@@ -73,19 +67,19 @@ public class FutureTest {
         try {
             thread_second.join();
         } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
-        assertEquals(null, object);
+        assertNull(object);
 
 
         resolve_thread.start();
-        Thread thread1 = new Thread(() -> {
-            object = future.get(10, timeUnit_test);
-        });
+        Thread thread1 = new Thread(() -> object = future.get(10, timeUnit_test));
         thread1.start();
         try {
             thread1.join();
         } catch (InterruptedException e) {
+            e.printStackTrace();
         }
         assertEquals(wantedObject, object);
     }
@@ -95,31 +89,30 @@ public class FutureTest {
     public void TestResolve() {
         object = null;
         future = new Future<>();
-        Thread thread = new Thread(() -> {
-            future.resolve(null);
-        });
+        Thread thread = new Thread(() -> future.resolve(null));
         thread.start();
         try {
             thread.join();
         } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
         thread_second.start();
         try {
             thread_second.join();
         } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
 
-        assertEquals(null, object);
+        assertNull(object);
 
-        Thread thread_second_V2 = new Thread(() -> {
-            future.resolve(wantedObject);
-        });
+        Thread thread_second_V2 = new Thread(() -> future.resolve(wantedObject));
         thread_second_V2.start();
         try {
             thread_second_V2.join();
         } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
         assertEquals(wantedObject, future.get());
@@ -128,8 +121,8 @@ public class FutureTest {
     @Test
     public void TestIsDOne() {
         future = new Future<>();
-        assertEquals(false, future.isDone());
+        assertFalse(future.isDone());
         future.resolve(wantedObject);
-        assertEquals(true, future.isDone());
+        assertTrue(future.isDone());
     }
 }

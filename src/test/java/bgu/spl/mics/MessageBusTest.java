@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
 
 class ExampleMicroService extends  MicroService {
     /**
-     * @param name the micro-service name (used mainly for debugging purposes -
+     * @param name the microservice name (used mainly for debugging purposes -
      *             does not have to be unique)
      */
 
@@ -54,34 +54,34 @@ public class MessageBusTest { //each test needs to be done separately as Message
     MessageBusImpl messageBus;
     ExampleEvent event;
     ExampleBroadcast broadcast;
-    ExampleMicroService microService;
+    bgu.spl.mics.example.ExampleMicroService microService;
 
     @Before
     public void setUp(){
         messageBus = MessageBusImpl.getInstance();
         event = new ExampleEvent("test_event");
         broadcast = new ExampleBroadcast("test_broadcast");
-        microService = new ExampleMicroService("test_micro_service");
+        microService = new bgu.spl.mics.example.ExampleMicroService("test_micro_service");
     }
 
     @Test
     public void subscribeEventTest() {
 
-        assertEquals(true, messageBus.isEventSubsEmpty(TrainModelEvent.class));
+        assertTrue(messageBus.isEventSubsEmpty(TrainModelEvent.class));
         messageBus.register(microService);
 
         messageBus.subscribeEvent(event.getClass(), microService);
-        assertEquals(false, messageBus.isEventSubsEmpty(event.getClass()));
+        assertFalse(messageBus.isEventSubsEmpty(event.getClass()));
 
     }
 
     @Test
     public void subscribeBroadcastTest() {
 
-        assertEquals(true, messageBus.isBroadcastSubsEmpty(broadcast.getClass()));
+        assertTrue(messageBus.isBroadcastSubsEmpty(broadcast.getClass()));
         messageBus.register(microService);
         messageBus.subscribeBroadcast(broadcast.getClass(), microService);
-        assertEquals(false, messageBus.isBroadcastSubsEmpty(broadcast.getClass()));
+        assertFalse(messageBus.isBroadcastSubsEmpty(broadcast.getClass()));
 
         messageBus.unregister(microService);
 
@@ -149,7 +149,7 @@ public class MessageBusTest { //each test needs to be done separately as Message
     public void registerTest() {
 
 
-        ExampleMicroService microService2 = new ExampleMicroService("test");
+        bgu.spl.mics.example.ExampleMicroService microService2 = new bgu.spl.mics.example.ExampleMicroService("test");
 
         messageBus.register(microService);
         messageBus.register(microService2);
@@ -182,7 +182,7 @@ public class MessageBusTest { //each test needs to be done separately as Message
         messageBus = MessageBusImpl.getInstance();
 
 
-       ExampleMicroService microService1 = new ExampleMicroService("not_exists");
+       bgu.spl.mics.example.ExampleMicroService microService1 = new bgu.spl.mics.example.ExampleMicroService("not_exists");
        messageBus.unregister(microService1);
        assertThrows(IllegalStateException.class, () -> messageBus.awaitMessage(microService1));
        messageBus.register(microService1);

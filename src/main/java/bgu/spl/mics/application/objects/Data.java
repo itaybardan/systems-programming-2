@@ -8,11 +8,34 @@ public class Data {
     /**
      * Enum representing the Data type.
      */
-    enum Type {
-        Images, Text, Tabular
+    enum DataType {
+        images, text, tabular
     }
 
-    private Type type;
-    private int processed;
-    private int size;
+    private final DataType type;
+    private final int processed;
+    private final int size;
+
+    public Data(DataType type, int size) {
+        this.type = type;
+        this.processed = 0;
+        this.size = size;
+    }
+
+    public int getTickTime() {
+        switch (this.type) {
+            case images:
+                return 4;
+            case tabular:
+                return 2;
+            case text:
+                return 1;
+            default:
+                return 0;
+        }
+    }
+
+    public int getSize() {
+        return this.size;
+    }
 }
