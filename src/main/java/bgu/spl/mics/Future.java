@@ -1,6 +1,7 @@
 package bgu.spl.mics;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A Future object represents a promised result - an object that will
@@ -13,12 +14,12 @@ import java.util.concurrent.TimeUnit;
 
 public class Future<T> {
 
-	private T result;
+	private AtomicReference<T> result =new AtomicReference<>();
 	/**
-	 * This should be the only public constructor in this class.
+	 * This should be the the only public constructor in this class.
 	 */
 	public Future() {
-		result = null;
+
 	}
 
 	/**
@@ -31,13 +32,13 @@ public class Future<T> {
 	 */
 	public synchronized T get() {
 
-		if(result == null) {
+		if(result.get() == null) {
 			try {
 				wait(); //Will wait indefinitely until either notify() is called. will also release monitor key in the meantime
 			} catch (InterruptedException e) {
 			}
 		}
-		return result; //it;s still not updated
+		return result.get(); //it;s still not updated
 	}
 
 
@@ -48,10 +49,10 @@ public class Future<T> {
 	 * @post this.result != null;
 	 *
 	 */
-	public synchronized void resolve (T result) {
-		if(this.result == null && result != null) {
-				this.result = result;
-				this.notifyAll();
+	public synchronized void resolve (T _result) {
+		if(this.result.get() == null && _result != null) {
+			result.set(_result);
+			notifyAll();
 		}
 	}
 
@@ -60,7 +61,7 @@ public class Future<T> {
 	 * @return true if this object has been resolved, false otherwise
 	 */
 	public boolean isDone() {
-		return result != null;
+		return result.get() != null;
 	}
 
 	/**
@@ -75,8 +76,8 @@ public class Future<T> {
 	 *         elapsed, return null.
 	 */
 	public synchronized T get(long timeout, TimeUnit unit) {
-		if(result != null){
-				return result;
+		if(result.get() != null){
+				return result.get();
 		}
 
 		try{
@@ -84,7 +85,7 @@ public class Future<T> {
 		}
 		catch (Exception e) {
 				System.out.println(Thread.currentThread().getId());
-				return result; //it;s still not updated
+				return result.get(); //it;s still not updated
 		}
 		//System.out.println(Thread.currentThread().getId());
 		return null; //Waited  the needed time, but there's still not result.
