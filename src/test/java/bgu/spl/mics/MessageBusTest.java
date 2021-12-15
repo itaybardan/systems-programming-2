@@ -2,6 +2,8 @@ package bgu.spl.mics;
 
 
 
+import bgu.spl.mics.application.broadcasts.TickBroadcast;
+import bgu.spl.mics.application.events.TrainModelEvent;
 import bgu.spl.mics.example.messages.ExampleBroadcast;
 import bgu.spl.mics.example.messages.ExampleEvent;
 
@@ -23,14 +25,10 @@ class ExampleMicroService extends  MicroService {
 
     public ExampleMicroService(String name) {
         super(name);
+
         messages_callbacks.put(ExampleEvent.class, (Object s) -> System.out.println(s));
         messages_callbacks.put(ExampleBroadcast.class, (Object s) -> System.out.println(s));
-
-    }
-
-    @Override
-    public synchronized void notifyMicroService() {
-        notify();
+        messages_callbacks.put(TickBroadcast.class, (Object s) -> System.out.println("time tick"));
     }
 
     @Override
@@ -42,9 +40,15 @@ class ExampleMicroService extends  MicroService {
             e.printStackTrace();
         }
     }
+
+    @Override
+    public synchronized void notifyMicroService() { //Used by bus when sending events/broadcasts to this micro service.
+
+        notifyAll();
+    }
 }
 
-public class MessageBusTest { //each test needs to be done seperately as MessageBusImpl is a singleton
+public class MessageBusTest { //each test needs to be done separately as MessageBusImpl is a singleton
 
 
     MessageBusImpl messageBus;
@@ -63,14 +67,12 @@ public class MessageBusTest { //each test needs to be done seperately as Message
     @Test
     public void subscribeEventTest() {
 
-        assertEquals(true, messageBus.isEventSubsEmpty(event.getClass()));
+        assertEquals(true, messageBus.isEventSubsEmpty(TrainModelEvent.class));
         messageBus.register(microService);
 
         messageBus.subscribeEvent(event.getClass(), microService);
         assertEquals(false, messageBus.isEventSubsEmpty(event.getClass()));
 
-        messageBus.unregister(microService);
-        assertEquals(true, messageBus.isEventSubsEmpty(event.getClass()));
     }
 
     @Test
@@ -131,7 +133,7 @@ public class MessageBusTest { //each test needs to be done seperately as Message
     }
 
     @Test
-    public void sendBEventTest() {
+    public void sendEventTest() {
         assertFalse(messageBus.isEventProcessed(event));
 
         messageBus.register(microService);
@@ -139,14 +141,15 @@ public class MessageBusTest { //each test needs to be done seperately as Message
         messageBus.sendEvent(event);
 
         assertTrue(messageBus.isEventProcessed(event));
+        messageBus.unregister(microService);
 
     }
 
     @Test
     public void registerTest() {
 
+
         ExampleMicroService microService2 = new ExampleMicroService("test");
-        assertFalse(messageBus.isRegistered(microService));
 
         messageBus.register(microService);
         messageBus.register(microService2);
@@ -179,14 +182,15 @@ public class MessageBusTest { //each test needs to be done seperately as Message
         messageBus = MessageBusImpl.getInstance();
 
 
-       ExampleMicroService not_exists = new ExampleMicroService("not_exists");
-        assertThrows(IllegalStateException.class, () -> messageBus.awaitMessage(not_exists));
-        messageBus.register(microService);
+       ExampleMicroService microService1 = new ExampleMicroService("not_exists");
+       messageBus.unregister(microService1);
+       assertThrows(IllegalStateException.class, () -> messageBus.awaitMessage(microService1));
+       messageBus.register(microService1);
 
 
         Thread thread = new Thread(() -> {
             try {
-               messageBus.awaitMessage(microService);
+               messageBus.awaitMessage(microService1);
             } catch (Exception e) {
 //                assertEquals(InterruptedException.class, e.getClass());
             }
@@ -194,17 +198,17 @@ public class MessageBusTest { //each test needs to be done seperately as Message
         thread.start(); //No events, the thread will be on wait()
 
 
-
-
-        messageBus.subscribeEvent(ExampleEvent.class, microService); //This part is still on loop but should work
+        messageBus.subscribeEvent(ExampleEvent.class, microService1); //This part is still on loop but should work
         messageBus.sendEvent(event);
+
         try {
-            assertEquals(event, messageBus.awaitMessage(microService));
+            thread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        assertTrue(messageBus.isMessageQueueEmpty(microService1));
 
 
-        messageBus.unregister(microService);
+        messageBus.unregister(microService1);
     }
 }

@@ -11,7 +11,7 @@ public class PublishConferenceBroadcast implements Broadcast {
     private final int publishesAmount;
     private CopyOnWriteArrayList<Model> publishes;
 
-    PublishConferenceBroadcast(int amm, CopyOnWriteArrayList<Model> _publishes){
+    public PublishConferenceBroadcast(int amm, CopyOnWriteArrayList<Model> _publishes){
         publishesAmount = amm;
         publishes = _publishes;
     }
@@ -24,11 +24,11 @@ public class PublishConferenceBroadcast implements Broadcast {
         return papersRead;
     }
     public int getPublishes(ArrayList<Model> models){
-        int papersRead = 0;
+        int studentPublishes = 0;
         for (Model m : models){
-            if (publishes.contains(m)) papersRead = papersRead + 1;
+            if (publishes.contains(m)) studentPublishes = studentPublishes + 1;
         }
-        return papersRead;
+        return studentPublishes;
     }
 
 }

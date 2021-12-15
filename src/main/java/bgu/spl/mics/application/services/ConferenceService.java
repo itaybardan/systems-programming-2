@@ -3,9 +3,13 @@ package bgu.spl.mics.application.services;
 import bgu.spl.mics.Callback;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.broadcasts.PublishConferenceBroadcast;
+import bgu.spl.mics.application.broadcasts.TerminateBroadcast;
+import bgu.spl.mics.application.broadcasts.TickBroadcast;
 import bgu.spl.mics.application.events.PublishResultsEvent;
 import bgu.spl.mics.application.objects.ConferenceInformation;
-import bgu.spl.mics.application.objects.Model;
+import jdk.nashorn.internal.codegen.CompilerConstants;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Conference service is in charge of
@@ -17,40 +21,46 @@ import bgu.spl.mics.application.objects.Model;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class ConferenceService extends MicroService {
-    private ConferenceInformation conference;
-    private int countDown;
 
-    public ConferenceService(String name, ConferenceInformation _conference, int _countDown) {
+    private ConferenceInformation conference;
+    private final int startTime;
+    private AtomicInteger currentTime;
+
+    public ConferenceService(String name, ConferenceInformation _conference, int _startTime) { //startTime will be calculated in advance in main, by previousConference's conferenceDate
         super(name);
         conference = _conference;
-        countDown = _countDown;
-        // TODO Implement this
+        startTime = _startTime; // = prevConference.conferenceDate / tickTime || 1 if it's the first conference, startTime <= program duration
+        currentTime = new AtomicInteger(1);
     }
 
     @Override
     protected void initialize() {
 
+        synchronized (this){
+            try {
+                Thread.sleep(startTime);
+            } catch (InterruptedException e) {
+                //terminate();
+            }
+        }
 
         messageBus.register(this);
 
 
         //Setting up Callbacks
-        Callback<PublishResultsEvent> publishResultsCallback = ( PublishResultsEvent e) -> {
-            conference.addPublish(e.getModel());
+        Callback<PublishResultsEvent> publishResultsCallback = (PublishResultsEvent e) -> conference.addPublish(e.getModel());
+        Callback<TickBroadcast> tickCallback = (TickBroadcast b) ->{
+          currentTime.set(b.time);
+          if(currentTime.get() >= conference.getDate()){
+              sendBroadcast(new PublishConferenceBroadcast(conference.getAmmountOfPublishes(), conference.getPublishes()));
+              terminate();
+          }
         };
-
-        Callback<PublishConferenceBroadcast> publishConferenceCallback = (PublishConferenceBroadcast b) -> {
-            terminate();
-        };
-
-        messages_callbacks.put(PublishResultsEvent.class, publishResultsCallback);
-
-        //Setting up one's tasks.
 
         //Subscribing to necessary events and broadcasts
+        subscribeEvent(PublishResultsEvent.class, publishResultsCallback);
+        subscribeBroadcast(TickBroadcast.class, tickCallback);
 
-
-        //Sending Event for all models
 
     }
 

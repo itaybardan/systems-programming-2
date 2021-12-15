@@ -1,9 +1,10 @@
 package bgu.spl.mics;
 
 
+import bgu.spl.mics.application.broadcasts.TerminateBroadcast;
+
 import java.util.HashMap;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * The MicroService is an abstract class that any micro-service in the system
@@ -45,6 +46,7 @@ public abstract class MicroService implements Runnable {
     public MicroService(String name) {
         this.name = name;
         messages_callbacks = new HashMap<>();
+        messageBus.register(this);
     }
 
     /**
@@ -170,8 +172,12 @@ public abstract class MicroService implements Runnable {
      */
     @Override
     public void run() {
-        messageBus.register(this);
+
         initialize();
+        Callback<TerminateBroadcast> terminateCallback = (TerminateBroadcast b) ->{
+            terminate();
+        };
+        subscribeBroadcast(TerminateBroadcast.class, terminateCallback); //Every microservice will be terminated at the end of the program's duration
 
         while (!terminated) {
             try {
@@ -192,7 +198,7 @@ public abstract class MicroService implements Runnable {
 
 
     public synchronized void notifyMicroService() { //Used by bus when sending events/broadcasts to this micro service.
-        notify();
+        notifyAll();
     }
 
     public Set<Class<? extends Message>> getMessagesCallbacks(){

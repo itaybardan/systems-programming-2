@@ -5,9 +5,9 @@ package bgu.spl.mics.application;
  * In the end, you should output a text file.
  */
 public class CRMSRunner {
-    public static void main(String[] args) {
-
-
-
-    }
+//    public static void main(String[] args) {
+//
+//
+//
+//    }
 }
