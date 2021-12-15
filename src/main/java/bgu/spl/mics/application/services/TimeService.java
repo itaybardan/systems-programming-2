@@ -32,7 +32,7 @@ public class TimeService extends MicroService {
         this.duration = duration;
         this.tickTime = tickTime;
         this.currentTick = 1;
-        this.scheduler = Executors.newScheduledThreadPool(1);
+        this.scheduler = Executors.newScheduledThreadPool(2);
     }
 
     @Override
@@ -45,9 +45,13 @@ public class TimeService extends MicroService {
                     cancel();
             }
         };
-        scheduler.scheduleAtFixedRate(task, 0, this.tickTime, TimeUnit.MILLISECONDS);
-        scheduler.shutdown();
-        sendBroadcast(new TickBroadcast(-1)); // sends terminate signal to
+        this.scheduler.scheduleAtFixedRate(task, 0, this.tickTime, TimeUnit.MILLISECONDS);
+        try {
+            this.scheduler.wait(this.duration);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        this.scheduler.shutdown();
         terminate();
     }
 }

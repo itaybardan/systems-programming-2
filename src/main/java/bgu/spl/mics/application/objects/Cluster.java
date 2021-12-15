@@ -18,7 +18,6 @@ public class Cluster {
 
     private static class ClusterInstanceHolder {
         private static final Cluster clusterInstance = new Cluster();
-
     }
 
     /**
@@ -27,6 +26,7 @@ public class Cluster {
     public static Cluster getInstance() {
         return Cluster.ClusterInstanceHolder.clusterInstance;
     }
+
 
 
 }
