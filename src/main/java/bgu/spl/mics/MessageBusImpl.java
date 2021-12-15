@@ -51,14 +51,12 @@ public class MessageBusImpl implements MessageBus {
         return microServicesMessages.containsKey(m);
     }
 
-
     public boolean isEventProcessed(Event<?> event) {
         for (MicroService m : microServicesMessages.keySet()) {
             if (microServicesMessages.get(m).contains(event)) return true;
         }
         return false;
     }
-
 
     public boolean isBroadcastProcessed(Broadcast broadcast) {
         for (MicroService m : microServicesMessages.keySet()) {
@@ -67,7 +65,6 @@ public class MessageBusImpl implements MessageBus {
 
         return false;
     }
-
 
     //Methods
     @Override

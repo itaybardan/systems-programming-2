@@ -1,5 +1,6 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -22,7 +23,6 @@ public class GPU {
         put(Type.GTX1080, 8);
     }};
     private Type type;
-    private Model model;
     private Cluster cluster;
     private LinkedList<DataBatch> processedData;
     public AtomicInteger ticks;
@@ -40,14 +40,6 @@ public class GPU {
 
     public void setType(Type type) {
         this.type = type;
-    }
-
-    public Model getModel() {
-        return model;
-    }
-
-    public void setModel(Model model) {
-        this.model = model;
     }
 
     public Cluster getCluster() {
@@ -69,7 +61,8 @@ public class GPU {
      * @pre getProcessedDataSize() > 0
      * @post @post(getTicks()) - @pre(getTicks()) == GPU.typeToTrainTickTime.get(this.type)
      */
-    public void trainDataBatchModel() {
+    public void trainDataBatchModel(Model model) {
+        Data data = new Data(Data.DataType.valueOf(model.getType().toString()), model.getSize());
 
     }
 

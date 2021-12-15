@@ -1,12 +1,11 @@
 package bgu.spl.mics.application.services;
 
-import bgu.spl.mics.Message;
-import bgu.spl.mics.MessageBusImpl;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.TestModelEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.messages.TrainModelEvent;
 import bgu.spl.mics.application.objects.GPU;
+import bgu.spl.mics.application.objects.Student;
 
 /**
  * GPU service is responsible for handling the
@@ -35,11 +34,27 @@ public class GPUService extends MicroService {
         });
 
         this.subscribeEvent(TestModelEvent.class, testModelMessage -> {
-
+            if (testModelMessage.getStudent().getStatus() == Student.Degree.PhD) {
+                if (Math.random() <= 0.8) {
+                    this.complete(testModelMessage, "Good");
+                }
+                else {
+                    this.complete(testModelMessage, "Bad");
+                }
+            }
+            else if (testModelMessage.getStudent().getStatus() == Student.Degree.MSc) {
+                if (Math.random() <= 0.6) {
+                    this.complete(testModelMessage, "Good");
+                }
+                else {
+                    this.complete(testModelMessage, "Bad");
+                }
+            }
         });
 
         this.subscribeEvent(TrainModelEvent.class, trainModelMessage -> {
-
+            gpu.setModel(trainModelMessage.model);
+            gpu.trainDataBatchModel();
         });
     }
 }

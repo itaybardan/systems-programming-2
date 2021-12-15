@@ -21,25 +21,12 @@ import java.util.ArrayList;
  * <p>
  */
 public abstract class MicroService implements Runnable {
-
-    protected ArrayList<Class<? extends Event>> event_subs; //Will hold all the event types that this microservice is interested in "subbing" to
-    protected ArrayList<Class<? extends  Broadcast>> broadcast_subs;
-
     private boolean terminated = false;
     private final String name;
 
     protected MessageBusImpl messageBus = MessageBusImpl.getInstance();
 
     public synchronized void notifyMicroService(){ };
-
-
-
-    public ArrayList<Class<? extends Event>> getEventsSubs(){
-        return event_subs;
-    }
-    public ArrayList<Class<? extends Broadcast>> getBroadcastsSubs(){
-        return broadcast_subs;
-    }
 
     /**
      * @param name the micro-service name (used mainly for debugging purposes -
