@@ -112,7 +112,6 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public <T> void complete(Event<T> e, T result) { // needs to somehow connect with the MS that send the event.
-
         e.getFuture().resolve(result);
 
     }

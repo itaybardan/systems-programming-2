@@ -33,5 +33,13 @@ public class GPUService extends MicroService {
             }
             this.gpu.increaseTicks();
         });
+
+        this.subscribeEvent(TestModelEvent.class, testModelMessage -> {
+
+        });
+
+        this.subscribeEvent(TrainModelEvent.class, trainModelMessage -> {
+
+        });
     }
 }

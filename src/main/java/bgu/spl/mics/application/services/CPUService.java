@@ -27,5 +27,6 @@ public class CPUService extends MicroService {
             this.cpu.increaseTicks();
         });
 
+
     }
 }
