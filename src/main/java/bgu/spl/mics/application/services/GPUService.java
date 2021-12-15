@@ -27,9 +27,6 @@ public class GPUService extends MicroService {
     @Override
     protected void initialize() {
         this.subscribeBroadcast(TickBroadcast.class, tickBroadcastMessage -> {
-            if (tickBroadcastMessage.getTick() == -1) {
-                this.terminate();
-            }
             this.gpu.increaseTicks();
         });
 
@@ -53,8 +50,7 @@ public class GPUService extends MicroService {
         });
 
         this.subscribeEvent(TrainModelEvent.class, trainModelMessage -> {
-            gpu.setModel(trainModelMessage.model);
-            gpu.trainDataBatchModel();
+            gpu.trainModel(trainModelMessage.model);
         });
     }
 }

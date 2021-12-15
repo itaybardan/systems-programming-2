@@ -21,9 +21,6 @@ public class CPUService extends MicroService {
     @Override
     protected void initialize() {
         this.subscribeBroadcast(TickBroadcast.class, tickBroadcastMessage -> {
-            if (tickBroadcastMessage.getTick() == -1) {
-                this.terminate();
-            }
             this.cpu.increaseTicks();
         });
     }

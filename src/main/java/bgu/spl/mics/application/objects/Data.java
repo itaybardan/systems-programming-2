@@ -33,6 +33,9 @@ public class Data {
             default:
                 return 0;
         }
+    }
 
+    public int getSize() {
+        return this.size;
     }
 }
