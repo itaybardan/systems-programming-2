@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.objects.CPU;
 
 /**
@@ -11,7 +12,7 @@ import bgu.spl.mics.application.objects.CPU;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class CPUService extends MicroService {
-    private CPU cpu;
+    private final CPU cpu;
     public CPUService(String name, CPU cpu) {
         super(name);
         this.cpu = cpu;
@@ -19,7 +20,11 @@ public class CPUService extends MicroService {
 
     @Override
     protected void initialize() {
-        // TODO Implement this
-
+        this.subscribeBroadcast(TickBroadcast.class, tickBroadcastMessage -> {
+            if (tickBroadcastMessage.getTick() == -1) {
+                this.terminate();
+            }
+            this.cpu.increaseTicks();
+        });
     }
 }

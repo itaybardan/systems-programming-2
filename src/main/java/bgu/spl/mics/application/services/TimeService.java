@@ -1,6 +1,14 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.TickBroadcast;
+
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 /**
  * TimeService is the global system timer There is only one instance of this micro-service.
@@ -12,16 +20,38 @@ import bgu.spl.mics.MicroService;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class TimeService extends MicroService {
+    private static final Logger LOGGER = Logger.getLogger(TimeService.class.getName());
+    private final int duration;
+    private final int tickTime;
+    private int currentTick;
+    private final ScheduledExecutorService scheduler;
 
-    public TimeService() {
-        super("Change_This_Name");
-        // TODO Implement this
+
+    public TimeService(String name, int duration, int tickTime) {
+        super(name);
+        this.duration = duration;
+        this.tickTime = tickTime;
+        this.currentTick = 1;
+        this.scheduler = Executors.newScheduledThreadPool(2);
     }
 
     @Override
     protected void initialize() {
-        // TODO Implement this
-
+        TimerTask task = new TimerTask() {
+            public void run() {
+                sendBroadcast(new TickBroadcast(currentTick));
+                currentTick++;
+                if (currentTick == duration + 1)
+                    cancel();
+            }
+        };
+        this.scheduler.scheduleAtFixedRate(task, 0, this.tickTime, TimeUnit.MILLISECONDS);
+        try {
+            this.scheduler.wait(this.duration);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        this.scheduler.shutdown();
+        terminate();
     }
-
 }

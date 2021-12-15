@@ -30,14 +30,14 @@ public class MessageBusTest {
     @Test
     public void subscribeEventTest() {
 
-        assertTrue(messageBus.isEventSubsEmpty(event.getClass()));
+        assertTrue(messageBus.isEventSubscribersEmpty(event.getClass()));
         messageBus.register(microService);
 
         messageBus.subscribeEvent(event.getClass(), microService);
-        assertFalse(messageBus.isEventSubsEmpty(event.getClass()));
+        assertFalse(messageBus.isEventSubscribersEmpty(event.getClass()));
 
         messageBus.unregister(microService);
-        assertTrue(messageBus.isEventSubsEmpty(event.getClass()));
+        assertTrue(messageBus.isEventSubscribersEmpty(event.getClass()));
     }
 
     @Test

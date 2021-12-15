@@ -1,7 +1,11 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.TestModelEvent;
+import bgu.spl.mics.application.messages.TickBroadcast;
+import bgu.spl.mics.application.messages.TrainModelEvent;
 import bgu.spl.mics.application.objects.GPU;
+import bgu.spl.mics.application.objects.Student;
 
 /**
  * GPU service is responsible for handling the
@@ -13,7 +17,7 @@ import bgu.spl.mics.application.objects.GPU;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class GPUService extends MicroService {
-    private GPU gpu;
+    private final GPU gpu;
 
     public GPUService(String name, GPU gpu) {
         super(name);
@@ -22,7 +26,35 @@ public class GPUService extends MicroService {
 
     @Override
     protected void initialize() {
-        // TODO Implement this
+        this.subscribeBroadcast(TickBroadcast.class, tickBroadcastMessage -> {
+            if (tickBroadcastMessage.getTick() == -1) {
+                this.terminate();
+            }
+            this.gpu.increaseTicks();
+        });
 
+        this.subscribeEvent(TestModelEvent.class, testModelMessage -> {
+            if (testModelMessage.getStudent().getStatus() == Student.Degree.PhD) {
+                if (Math.random() <= 0.8) {
+                    this.complete(testModelMessage, "Good");
+                }
+                else {
+                    this.complete(testModelMessage, "Bad");
+                }
+            }
+            else if (testModelMessage.getStudent().getStatus() == Student.Degree.MSc) {
+                if (Math.random() <= 0.6) {
+                    this.complete(testModelMessage, "Good");
+                }
+                else {
+                    this.complete(testModelMessage, "Bad");
+                }
+            }
+        });
+
+        this.subscribeEvent(TrainModelEvent.class, trainModelMessage -> {
+            gpu.setModel(trainModelMessage.model);
+            gpu.trainDataBatchModel();
+        });
     }
 }

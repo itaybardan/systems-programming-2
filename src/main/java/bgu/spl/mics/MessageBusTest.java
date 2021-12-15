@@ -1,8 +1,6 @@
 package bgu.spl.mics;
 
 
-import bgu.spl.mics.application.objects.Student;
-import bgu.spl.mics.application.services.StudentService;
 import bgu.spl.mics.example.messages.ExampleBroadcast;
 import bgu.spl.mics.example.messages.ExampleEvent;
 
@@ -66,14 +64,14 @@ public class MessageBusTest { //each test needs to be done seperately as Message
     @Test
     public void subscribeEventTest() {
 
-        assertEquals(true, messageBus.isEventSubsEmpty(event.getClass()));
+        assertEquals(true, messageBus.isEventSubscribersEmpty(event.getClass()));
         messageBus.register(microService);
 
         messageBus.subscribeEvent(event.getClass(), microService);
-        assertEquals(false, messageBus.isEventSubsEmpty(event.getClass()));
+        assertEquals(false, messageBus.isEventSubscribersEmpty(event.getClass()));
 
         messageBus.unregister(microService);
-        assertEquals(true, messageBus.isEventSubsEmpty(event.getClass()));
+        assertEquals(true, messageBus.isEventSubscribersEmpty(event.getClass()));
     }
 
     @Test

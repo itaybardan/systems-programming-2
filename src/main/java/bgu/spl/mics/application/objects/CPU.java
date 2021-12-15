@@ -3,6 +3,7 @@ package bgu.spl.mics.application.objects;
 
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Passive object representing a single CPU.
@@ -20,7 +21,7 @@ public class CPU {
     private LinkedList<DataBatch> unprocessedDataBatch;
     private LinkedList<Data> processedData;
     private Cluster cluster;
-    private int ticks;
+    public AtomicInteger ticks;
 
     public CPU(int cores, Cluster cluster) {
         this.cores = cores;
@@ -90,11 +91,15 @@ public class CPU {
     }
 
     public int getTicks() {
-        return ticks;
+        return ticks.get();
     }
 
-    public void setTicks(int ticks) {
-        this.ticks = ticks;
+
+    public void increaseTicks() {
+        int currentTicks;
+        do {
+            currentTicks = this.ticks.get();
+        } while (!this.ticks.compareAndSet(currentTicks, currentTicks + 1));
     }
 }
 

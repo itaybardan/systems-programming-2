@@ -39,4 +39,8 @@ public class Model {
         this.type = ModelType.valueOf(type.toLowerCase(Locale.ROOT));
         this.size = size;
     }
+
+    public ModelType getType() {
+        return this.type;
+    }
 }

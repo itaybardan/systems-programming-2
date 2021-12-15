@@ -2,13 +2,15 @@ package bgu.spl.mics.application;
 
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.objects.*;
-import bgu.spl.mics.application.services.CPUService;
-import bgu.spl.mics.application.services.ConferenceService;
-import bgu.spl.mics.application.services.GPUService;
-import bgu.spl.mics.application.services.StudentService;
-import com.google.gson.*;
+import bgu.spl.mics.application.services.*;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import jdk.internal.net.http.common.Pair;
 
-import java.io.*;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.ArrayList;
 
 /**
@@ -19,18 +21,18 @@ import java.util.ArrayList;
 public class CRMSRunner {
 
     private static class InputInfo {
-        private ArrayList<Student> students;
-        private ArrayList<ConferenceInformation> conferences;
-        private int duration;
-        private int ticks;
-        private ArrayList<GPU> gpus;
-        private ArrayList<CPU> cpus;
+        private final ArrayList<Student> students;
+        private final ArrayList<ConferenceInformation> conferences;
+        private final int duration;
+        private final int tickTime;
+        private final ArrayList<GPU> gpus;
+        private final ArrayList<CPU> cpus;
 
-        public InputInfo(ArrayList<Student> students, ArrayList<ConferenceInformation> conferences, int duration, int ticks, ArrayList<GPU> gpus, ArrayList<CPU> cpus) {
+        public InputInfo(ArrayList<Student> students, ArrayList<ConferenceInformation> conferences, int duration, int tickTime, ArrayList<GPU> gpus, ArrayList<CPU> cpus) {
             this.students = students;
             this.conferences = conferences;
             this.duration = duration;
-            this.ticks = ticks;
+            this.tickTime = tickTime;
             this.cpus = cpus;
             this.gpus = gpus;
         }
@@ -38,11 +40,11 @@ public class CRMSRunner {
 
     public static void main(String[] args) {
         InputInfo inputInfo = parseJsonInputFile();
-        ArrayList<MicroService> microServices = createMicroServices(inputInfo);
-        initMicroServices(microServices);
+        Pair<ArrayList<MicroService>, TimeService> microServicesPair = createMicroServices(inputInfo);
+        initMicroServices(microServicesPair.first, microServicesPair.second);
     }
 
-    private static ArrayList<MicroService> createMicroServices(InputInfo inputInfo) {
+    private static Pair<ArrayList<MicroService>, TimeService> createMicroServices(InputInfo inputInfo) {
         ArrayList<MicroService> microServices = new ArrayList<>();
         for (Student student : inputInfo.students) {
             microServices.add(new StudentService(student.getName(), student));
@@ -62,13 +64,47 @@ public class CRMSRunner {
             microServices.add(new GPUService(String.valueOf(i), gpu));
         }
 
-        return microServices;
+        TimeService timeService = new TimeService("time-service", inputInfo.duration, inputInfo.tickTime);
+
+        return new Pair(microServices, timeService);
     }
 
-    private static void initMicroServices(ArrayList<? extends MicroService> microServices) {
+    private static void initMicroServices(ArrayList<? extends MicroService> microServices, TimeService ts) {
+        // create threads out of every ms
+        ArrayList<Thread> threads = new ArrayList<>();
         for (MicroService ms : microServices) {
-            ms.run();
+            threads.add(new Thread(ms));
         }
+
+        // start the threads
+        Thread timeServiceThread = new Thread(ts);
+        for (Thread thread : threads) {
+            thread.start();
+        }
+        timeServiceThread.start();
+
+
+        // wait for time service to finish
+        try {
+            timeServiceThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // set terminate in all ms
+        for (MicroService ms : microServices) {
+            ms.setTerminated(true);
+        }
+
+        // wait for the ms threads to finish
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 
     private static InputInfo parseJsonInputFile() {

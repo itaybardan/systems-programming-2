@@ -1,8 +1,10 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Passive object representing a single GPU.
@@ -10,15 +12,6 @@ import java.util.Map;
  * Add fields and methods to this class as you see fit (including public methods and constructors).
  */
 public class GPU {
-    /**
-     * @inv getAvailableProcessedDataSpace() >= 0
-     */
-    public GPU(String type) {
-        this.type = Type.valueOf(type);
-    }
-
-    enum Type {RTX3090, RTX2080, GTX1080}
-
     public static Map<Type, Integer> typeToTrainTickTime = new HashMap<Type, Integer>() {{
         put(Type.RTX3090, 1);
         put(Type.RTX2080, 2);
@@ -29,12 +22,17 @@ public class GPU {
         put(Type.RTX2080, 16);
         put(Type.GTX1080, 8);
     }};
-
     private Type type;
-    private Model model;
     private Cluster cluster;
     private LinkedList<DataBatch> processedData;
-    private int ticks;
+    public AtomicInteger ticks;
+
+    /**
+     * @inv getAvailableProcessedDataSpace() >= 0
+     */
+    public GPU(String type) {
+        this.type = Type.valueOf(type);
+    }
 
     public Type getType() {
         return type;
@@ -42,14 +40,6 @@ public class GPU {
 
     public void setType(Type type) {
         this.type = type;
-    }
-
-    public Model getModel() {
-        return model;
-    }
-
-    public void setModel(Model model) {
-        this.model = model;
     }
 
     public Cluster getCluster() {
@@ -71,17 +61,17 @@ public class GPU {
      * @pre getProcessedDataSize() > 0
      * @post @post(getTicks()) - @pre(getTicks()) == GPU.typeToTrainTickTime.get(this.type)
      */
-    public void trainDataBatchModel() {
+    public void trainDataBatchModel(Model model) {
+        Data data = new Data(Data.DataType.valueOf(model.getType().toString()), model.getSize());
 
     }
-
 
     public int getAvailableProcessedDataSpace() {
         return GPU.typeToProcessedDataCapacity.get(this.type) - this.processedData.size();
     }
 
     public int getTicks() {
-        return this.ticks;
+        return this.ticks.get();
     }
 
     public int getProcessedDataSize() {
@@ -96,4 +86,12 @@ public class GPU {
         this.processedData.add(db);
     }
 
+    enum Type {RTX3090, RTX2080, GTX1080}
+
+    public void increaseTicks() {
+        int currentTicks;
+        do {
+            currentTicks = this.ticks.get();
+        } while (!this.ticks.compareAndSet(currentTicks, currentTicks + 1));
+    }
 }
