@@ -4,6 +4,8 @@ package bgu.spl.mics.application.objects;
 import bgu.spl.mics.MessageBusImpl;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * Passive object representing the cluster.
@@ -15,7 +17,8 @@ import java.util.ArrayList;
 public class Cluster {
     private ArrayList<GPU> gpus;
     private ArrayList<CPU> cpus;
-
+    public final Queue<DataBatch> unProcessedDataBatches;
+    public Queue<DataBatch> processedDataBatches;
     private static class ClusterInstanceHolder {
         private static final Cluster clusterInstance = new Cluster();
     }
@@ -27,6 +30,10 @@ public class Cluster {
         return Cluster.ClusterInstanceHolder.clusterInstance;
     }
 
+    public Cluster() {
+        this.unProcessedDataBatches = new LinkedList<>();
+        this.processedDataBatches = new LinkedList<>();
+    }
 
 
 }

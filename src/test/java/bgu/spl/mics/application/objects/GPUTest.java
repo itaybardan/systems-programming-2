@@ -26,7 +26,7 @@ public class GPUTest {
     public void testTrainDataBatchModelComputingTime() {
         assertNotNull(this.gpu.getProcessedData().peek());
         long startTickTime = this.gpu.getTicks();
-        this.gpu.trainDataBatchModel();
+        this.gpu.trainModel();
         long computingTime = GPU.typeToTrainTickTime.get(this.gpu.getType());
         long endTickTime = this.gpu.getTicks();
         assertEquals(endTickTime - startTickTime, computingTime);

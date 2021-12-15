@@ -19,7 +19,7 @@ public class CPU {
 
     private final int cores;
     private LinkedList<DataBatch> unprocessedDataBatch;
-    private LinkedList<Data> processedData;
+    private Queue<Data> processedData;
     private Cluster cluster;
     public AtomicInteger ticks;
 
@@ -78,17 +78,6 @@ public class CPU {
         return unprocessedDataBatch;
     }
 
-    public Queue<Data> getProcessedData() {
-        return processedData;
-    }
-
-    public Cluster getCluster() {
-        return cluster;
-    }
-
-    public void setCluster(Cluster cluster) {
-        this.cluster = cluster;
-    }
 
     public int getTicks() {
         return ticks.get();

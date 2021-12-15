@@ -1,9 +1,6 @@
 package bgu.spl.mics.application.objects;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -53,16 +50,28 @@ public class GPU {
     /**
      * @post getAvailableProcessedDataSpace() == 0
      */
-    public void sendDataBatchToCluster() {
-
+    public void sendDataBatchToCluster(DataBatch dataBatch) {
+        synchronized (this.cluster.unProcessedDataBatches) {
+            this.cluster.unProcessedDataBatches.add(dataBatch);
+        }
     }
 
     /**
      * @pre getProcessedDataSize() > 0
      * @post @post(getTicks()) - @pre(getTicks()) == GPU.typeToTrainTickTime.get(this.type)
      */
-    public void trainDataBatchModel(Model model) {
+    public void trainModel(Model model) {
         Data data = new Data(Data.DataType.valueOf(model.getType().toString()), model.getSize());
+        Queue<DataBatch> dataBatches = new LinkedList<>();
+        for (int i = 0; i < data.getSize(); i += 1000) {
+            dataBatches.add(new DataBatch(i));
+        }
+
+        while (!dataBatches.isEmpty()) {
+                if (this.getAvailableProcessedDataSpace() > 0) {
+                    this.sendDataBatchToCluster(dataBatches.poll());
+                }
+        }
 
     }
 
