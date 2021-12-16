@@ -6,7 +6,7 @@ import bgu.spl.mics.application.services.*;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import jdk.internal.net.http.common.Pair;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -40,11 +40,11 @@ public class CRMSRunner {
 
     public static void main(String[] args) {
         InputInfo inputInfo = parseJsonInputFile();
-        Pair<ArrayList<MicroService>, TimeService> microServicesPair = createMicroServices(inputInfo);
-        initMicroServices(microServicesPair.first, microServicesPair.second);
+        ImmutablePair<ArrayList<MicroService>, TimeService> microServicesPair = createMicroServices(inputInfo);
+        initMicroServices(microServicesPair.getLeft(), microServicesPair.getRight());
     }
 
-    private static Pair createMicroServices(InputInfo inputInfo) {
+    private static ImmutablePair<ArrayList<MicroService>, TimeService> createMicroServices(InputInfo inputInfo) {
         ArrayList<MicroService> microServices = new ArrayList<>();
         for (Student student : inputInfo.students) {
             microServices.add(new StudentService(student));
@@ -67,7 +67,7 @@ public class CRMSRunner {
 
         TimeService timeService = new TimeService("time-service", inputInfo.duration, inputInfo.tickTime);
 
-        return new Pair<>(microServices, timeService);
+        return new ImmutablePair<>(microServices, timeService);
     }
 
     private static void initMicroServices(ArrayList<? extends MicroService> microServices, TimeService ts) {
