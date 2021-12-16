@@ -44,7 +44,7 @@ public class StudentService extends MicroService {
         Callback<TrainModelEvent> trainModelCallback = (TrainModelEvent e) -> {
 
             Model model = e.getModel();
-            TestModelEvent testModelEvent = new TestModelEvent(model);
+            TestModelEvent testModelEvent = new TestModelEvent(model, student.getStatus());
             testModelEvent.setFuture(sendEvent(testModelEvent)); //sending test model .
             task = testModelEvent;
 
