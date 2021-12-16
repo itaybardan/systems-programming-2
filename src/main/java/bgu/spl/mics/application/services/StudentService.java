@@ -37,7 +37,7 @@ public class StudentService extends MicroService {
 
         //Setting up Callbacks
         Callback<PublishConferenceBroadcast> publishConferenceCallback = (PublishConferenceBroadcast b) -> {
-            student.incrementPublifications(b.getPublishes(student.getModels()));
+            student.incrementPublications(b.getPublishes(student.getModels()));
             student.incrementPapersRead(b.getPapersRead(student.getModels()));
         };
 
@@ -52,7 +52,7 @@ public class StudentService extends MicroService {
 
         Callback<TestModelEvent> testModelCallback = (TestModelEvent e) -> {
             Model model = e.getModel();
-            model.setModelStatus(e.getFuture().get()); //the Future of TestModelEvent will be of type enum ModelStatus - Good or Bad.
+            model.setModelStatus(ModelStatus.valueOf(e.getFuture().get())); //the Future of TestModelEvent will be of type enum ModelStatus - Good or Bad.
 
             if (model.getModelStatus() == ModelStatus.Good) {
                 PublishResultsEvent publishResultsEvent = new PublishResultsEvent(model);

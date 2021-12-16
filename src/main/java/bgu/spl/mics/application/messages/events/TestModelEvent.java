@@ -3,14 +3,17 @@ package bgu.spl.mics.application.messages.events;
 import bgu.spl.mics.Event;
 import bgu.spl.mics.Future;
 import bgu.spl.mics.application.objects.Model;
+import bgu.spl.mics.application.objects.Student;
 
 public class TestModelEvent implements Event<String> {
     private final Model model;
+    private final Student.Degree studentDegree;
     private Future<String> future;
 
-    public TestModelEvent(Model model) {
+    public TestModelEvent(Model model, Student.Degree studentDegree) {
         this.model = model;
-        future = new Future<>();
+        this.studentDegree = studentDegree;
+        future = new Future<String>();
     }
 
     @Override
@@ -25,5 +28,10 @@ public class TestModelEvent implements Event<String> {
 
     public Model getModel() {
         return this.model;
+    }
+
+
+    public Student.Degree getStudentDegree() {
+        return this.studentDegree;
     }
 }

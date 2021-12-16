@@ -25,9 +25,6 @@ import java.util.Set;
  * <p>
  */
 public abstract class MicroService implements Runnable {
-
-    //Fields
-
     protected final String name;
     protected boolean terminated = false;
     protected MessageBusImpl messageBus = MessageBusImpl.getInstance();

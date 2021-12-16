@@ -1,10 +1,11 @@
 package bgu.spl.mics.application.objects;
 
+import bgu.spl.mics.application.messages.events.TrainModelEvent;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Passive object representing a single GPU.
@@ -22,59 +23,31 @@ public class GPU {
         put(Type.RTX2080, 16);
         put(Type.GTX1080, 8);
     }};
-    public AtomicInteger ticks;
-    private Type type;
-    private Cluster cluster;
-    private LinkedList<DataBatch> processedData;
+    public int ticks;
+    public Type type;
+    private Cluster cluster = Cluster.getInstance();
+    public LinkedList<DataBatch> processedData;
+    public boolean isTrainingModel = false;
+    public boolean isTrainingDataBatch = false;
+    public int startTrainingTick;
+    public Data data;
+    public ArrayList<DataBatch> dataBatches;
+    public int availableSpots;
+    public TrainModelEvent event;
 
     /**
      * @inv getAvailableProcessedDataSpace() >= 0
      */
     public GPU(String type) {
         this.type = Type.valueOf(type);
+        this.availableSpots = GPU.typeToProcessedDataCapacity.get(this.type) - this.processedData.size();
     }
 
-    public Type getType() {
-        return type;
-    }
-
-    public void setType(Type type) {
-        this.type = type;
-    }
-
-    public Cluster getCluster() {
-        return cluster;
-    }
-
-    public void setCluster(Cluster cluster) {
-        this.cluster = cluster;
-    }
 
     /**
      * @post getAvailableProcessedDataSpace() == 0
      */
     public void sendDataBatchToCluster(DataBatch dataBatch) {
-        synchronized (this.cluster.unProcessedDataBatches) {
-            this.cluster.unProcessedDataBatches.add(dataBatch);
-        }
-    }
-
-    /**
-     * @pre getProcessedDataSize() > 0
-     * @post @post(getTicks()) - @pre(getTicks()) == GPU.typeToTrainTickTime.get(this.type)
-     */
-    public void trainModel(Model model) {
-        Data data = new Data(Data.DataType.valueOf(model.getType().toString()), model.getSize());
-        Queue<DataBatch> dataBatches = new LinkedList<>();
-        for (int i = 0; i < data.getSize(); i += 1000) {
-            dataBatches.add(new DataBatch(i));
-        }
-
-        while (!dataBatches.isEmpty()) {
-            if (this.getAvailableProcessedDataSpace() > 0) {
-                this.sendDataBatchToCluster(dataBatches.poll());
-            }
-        }
 
     }
 
@@ -82,27 +55,56 @@ public class GPU {
         return GPU.typeToProcessedDataCapacity.get(this.type) - this.processedData.size();
     }
 
-    public int getTicks() {
-        return this.ticks.get();
-    }
-
-    public int getProcessedDataSize() {
-        return this.processedData.size();
-    }
-
     public LinkedList<DataBatch> getProcessedData() {
         return this.processedData;
     }
 
-    public void addProcessedDataBatch(DataBatch db) {
-        this.processedData.add(db);
+    public void increaseTicks() {
+        this.ticks++;
     }
 
-    public void increaseTicks() {
-        int currentTicks;
-        do {
-            currentTicks = this.ticks.get();
-        } while (!this.ticks.compareAndSet(currentTicks, currentTicks + 1));
+    public void startTrainingModel(TrainModelEvent event) {
+        this.isTrainingModel = true;
+        this.event = event;
+        Data data = new Data(Data.DataType.valueOf(event.model.getType().toString()), event.model.getSize());
+        this.dataBatches = new ArrayList<>();
+        for (int i = 0; i < data.getSize(); i += 1000) {
+            dataBatches.add(new DataBatch(i));
+        }
+
+        while (this.availableSpots > 0 && !dataBatches.isEmpty()) {
+            DataBatch dataBatchToSend = dataBatches.remove(0);
+            this.cluster.dataBatchToGpu.put(dataBatchToSend, this);
+            this.cluster.unprocessedDataBatches.add(dataBatchToSend);
+            this.availableSpots--;
+        }
+    }
+
+    public void finishTrainingDataBatch() {
+        this.isTrainingDataBatch = false;
+        this.availableSpots++;
+        this.event = null;
+
+    }
+
+    public void startTrainingDataBatch() {
+        while (this.cluster.gpuToProcessedDataBatches.get(this).isEmpty()) {
+            synchronized (this.cluster.gpuToProcessedDataBatches.get(this)) {
+                try {
+                    this.cluster.gpuToProcessedDataBatches.get(this).wait();
+                    this.processedData.add(this.cluster.gpuToProcessedDataBatches.get(this).remove(0));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public void finishTrainingModel() {
+        this.isTrainingModel = false;
+        this.event = null;
+        this.dataBatches = null;
+        this.availableSpots = -1;
     }
 
     enum Type {RTX3090, RTX2080, GTX1080}

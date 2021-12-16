@@ -1,9 +1,14 @@
 package bgu.spl.mics.application.objects;
 
 
+import org.apache.commons.lang3.tuple.MutablePair;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Passive object representing the cluster.
@@ -13,14 +18,12 @@ import java.util.Queue;
  * Add fields and methods to this class as you see fit (including public methods and constructors).
  */
 public class Cluster {
-    public final Queue<DataBatch> unProcessedDataBatches;
-    public final Queue<DataBatch> processedDataBatches;
-    private ArrayList<GPU> gpus;
-    private ArrayList<CPU> cpus;
+    public ConcurrentHashMap<DataBatch, GPU> dataBatchToGpu;
+    public CopyOnWriteArrayList<DataBatch> unprocessedDataBatches;
+    public ConcurrentHashMap<GPU, CopyOnWriteArrayList<DataBatch>> gpuToProcessedDataBatches;
 
     public Cluster() {
-        this.unProcessedDataBatches = new LinkedList<>();
-        this.processedDataBatches = new LinkedList<>();
+
     }
 
     /**

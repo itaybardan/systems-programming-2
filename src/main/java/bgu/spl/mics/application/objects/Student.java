@@ -67,4 +67,5 @@ public class Student {
     public enum Degree {
         MSc, PhD
     }
+
 }

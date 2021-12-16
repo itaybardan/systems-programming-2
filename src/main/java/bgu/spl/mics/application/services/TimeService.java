@@ -41,15 +41,18 @@ public class TimeService extends MicroService {
             public void run() {
                 sendBroadcast(new TickBroadcast(currentTick));
                 currentTick++;
-                if (currentTick == duration + 1)
+                if (currentTick > duration)
                     cancel();
             }
         };
         this.scheduler.scheduleAtFixedRate(task, 0, this.tickTime, TimeUnit.MILLISECONDS);
-        try {
-            this.scheduler.wait(this.duration);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+
+        while (this.currentTick < duration) {
+            try {
+                this.scheduler.wait(this.duration);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
         this.scheduler.shutdown();
         sendBroadcast(new TerminateBroadcast());
