@@ -13,14 +13,13 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 
 class ExampleGPU extends MicroService {
 
 
     /**
-     * @param name the micro-service name (used mainly for debugging purposes -
+     * @param name the microservice name (used mainly for debugging purposes -
      *             does not have to be unique)
      */
     public ExampleGPU(String name) {

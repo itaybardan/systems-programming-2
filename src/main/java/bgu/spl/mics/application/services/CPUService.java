@@ -26,12 +26,10 @@ public class CPUService extends MicroService {
                     cpu.finishProcessing();
                     cpu.getNewDataBatch();
                 }
-            }
-            else {
+            } else {
                 cpu.getNewDataBatch();
                 cpu.startProcessDataBatch();
             }
-
         });
     }
 }

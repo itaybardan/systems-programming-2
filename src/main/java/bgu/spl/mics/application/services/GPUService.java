@@ -33,11 +33,13 @@ public class GPUService extends MicroService {
         this.subscribeBroadcast(TickBroadcast.class, tickBroadcastMessage -> {
             this.gpu.increaseTicks();
             if (gpu.isTrainingModel) {
-                if (gpu.isTrainingDataBatch && gpu.ticks - gpu.startTrainingTick == GPU.typeToTrainTickTime.get(gpu.type)) {
-                    gpu.finishTrainingDataBatch();
-                    if (gpu.dataBatches.isEmpty()) {
-                        gpu.finishTrainingModel();
-                        this.complete(gpu.event, gpu.event.model);
+                if (gpu.isTrainingDataBatch) {
+                    if (gpu.ticks - gpu.startTrainingTick == GPU.typeToTrainTickTime.get(gpu.type)) {
+                        gpu.finishTrainingDataBatch();
+                        if (gpu.dataBatches.isEmpty()) {
+                            gpu.finishTrainingModel();
+                            this.complete(gpu.event, gpu.event.model);
+                        }
                     }
                 } else {
                     gpu.startTrainingDataBatch();
@@ -47,7 +49,6 @@ public class GPUService extends MicroService {
                     this.gpu.startTrainingModel(this.trainModelTasks.poll());
                 }
             }
-
         });
 
         this.subscribeEvent(TestModelEvent.class, testModelMessage -> {

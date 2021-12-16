@@ -86,7 +86,6 @@ public class GPU {
     public void finishTrainingDataBatch() {
         this.isTrainingDataBatch = false;
         this.availableSpots++;
-        this.event = null;
 
     }
 

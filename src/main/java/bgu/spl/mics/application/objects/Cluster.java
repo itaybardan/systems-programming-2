@@ -18,6 +18,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Add fields and methods to this class as you see fit (including public methods and constructors).
  */
 public class Cluster {
+    // TODO: add statistics variable
     public ConcurrentHashMap<DataBatch, GPU> dataBatchToGpu;
     public CopyOnWriteArrayList<DataBatch> unprocessedDataBatches;
     public ConcurrentHashMap<GPU, CopyOnWriteArrayList<DataBatch>> gpuToProcessedDataBatches;
@@ -38,6 +39,4 @@ public class Cluster {
     private static class ClusterInstanceHolder {
         private static final Cluster clusterInstance = new Cluster();
     }
-
-
 }

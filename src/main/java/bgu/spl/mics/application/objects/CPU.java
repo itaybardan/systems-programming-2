@@ -44,8 +44,11 @@ public class CPU {
     }
 
     public void getNewDataBatch() {
-        if (!this.cluster.unprocessedDataBatches.isEmpty()) {
-            this.dataBatch = this.cluster.unprocessedDataBatches.remove(0);
+        // TODO: add lock here
+        synchronized (this.cluster.unprocessedDataBatches) {
+            if (!this.cluster.unprocessedDataBatches.isEmpty()) {
+                this.dataBatch = this.cluster.unprocessedDataBatches.remove(0);
+            }
         }
     }
 
