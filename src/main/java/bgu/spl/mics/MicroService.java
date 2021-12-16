@@ -1,7 +1,8 @@
 package bgu.spl.mics;
 
 
-import bgu.spl.mics.application.broadcasts.TerminateBroadcast;
+import bgu.spl.mics.application.messages.broadcasts.TerminateBroadcast;
+import bgu.spl.mics.application.messages.broadcasts.TickBroadcast;
 
 import java.util.HashMap;
 import java.util.Set;
@@ -166,33 +167,29 @@ public abstract class MicroService implements Runnable {
     }
 
     /**
-     * The entry point of the micro-service. TODO: you must complete this code
+     * The entry point of the micro-service.
      * otherwise you will end up in an infinite loop.
      */
     @Override
     public void run() {
 
-        initialize();
         Callback<TerminateBroadcast> terminateCallback = (TerminateBroadcast b) -> {
             terminate();
         };
         subscribeBroadcast(TerminateBroadcast.class, terminateCallback); //Every microservice will be terminated at the end of the program's duration
 
+
+
+        initialize();
+        Message message;
+
         while (!terminated) {
-            try {
-                if (task != null) {
 
-                    if (task.getFuture().isDone()) {
-                        messages_callbacks.get(task.getClass()).call(task);
-                        //task = null; the callback will decide whether to set it to null or not.
-                    }
-                    if (messageBus.isMessageQueueEmpty(this)) continue;
+                try {
+                    message = messageBus.awaitMessage(this);
+                    messages_callbacks.get(message.getClass()).call(message);
 
-                }
-                Message message = messageBus.awaitMessage(this);
-                messages_callbacks.get(message.getClass()).call(message);
-
-            } catch (InterruptedException exp) {
+                } catch (InterruptedException exp) {
                 System.out.println("thread:" + Thread.currentThread().getId() + " interrupted thread:" + name);
             }
         }

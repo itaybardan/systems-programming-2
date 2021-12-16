@@ -3,6 +3,7 @@ package bgu.spl.mics.application.objects;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 
+
 public class Model {
 
     private final String name;

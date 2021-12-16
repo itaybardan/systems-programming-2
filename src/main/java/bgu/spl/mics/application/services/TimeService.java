@@ -1,58 +1,64 @@
 package bgu.spl.mics.application.services;
 
-import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.broadcasts.TerminateBroadcast;
-import bgu.spl.mics.application.messages.TickBroadcast;
-
+import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
+import java.util.concurrent.atomic.AtomicInteger;
+import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.broadcasts.TerminateBroadcast;
+import bgu.spl.mics.application.messages.broadcasts.TickBroadcast;
 
 /**
  * TimeService is the global system timer There is only one instance of this microservice.
  * It keeps track of the amount of ticks passed since initialization and notifies
  * all other microservices about the current time tick using {@link TickBroadcast}.
  * This class may not hold references for objects which it is not responsible for.
- * <p>
+ *
  * You can add private fields and public methods to this class.
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class TimeService extends MicroService {
-    private static final Logger LOGGER = Logger.getLogger(TimeService.class.getName());
-    private final int duration;
-    private final int tickTime;
-    private final ScheduledExecutorService scheduler;
-    private int currentTick;
+
+    private Timer timer;
+    private int programDuration;
+    private int tick_length;
+    private AtomicInteger currentTime;
 
 
-    public TimeService(String name, int duration, int tickTime) {
+    public TimeService(String name, int _tick_length, int _programDuration) {
         super(name);
-        this.duration = duration;
-        this.tickTime = tickTime;
-        this.currentTick = 1;
-        this.scheduler = Executors.newScheduledThreadPool(2);
+        tick_length = _tick_length;
+        programDuration = _programDuration;
     }
+
 
     @Override
     protected void initialize() {
-        TimerTask task = new TimerTask() {
+        timer = new Timer();
+        currentTime = new AtomicInteger(1);
+
+        //starting count time
+
+        timer.schedule(timerTask(() -> {
+                    if (currentTime.get() < programDuration) {
+                        sendBroadcast(new TickBroadcast(currentTime.get()));
+                    } else {
+                        sendBroadcast(new TerminateBroadcast());
+                        terminate();
+                        timer.cancel();
+                    }
+                    currentTime.addAndGet(tick_length);
+                }
+        ), 0, tick_length);
+
+
+    }
+
+    private static TimerTask timerTask(Runnable runnable) {
+        return new TimerTask() {
+            @Override
             public void run() {
-                sendBroadcast(new TickBroadcast(currentTick));
-                currentTick++;
-                if (currentTick == duration + 1)
-                    cancel();
+                runnable.run();
             }
         };
-        this.scheduler.scheduleAtFixedRate(task, 0, this.tickTime, TimeUnit.MILLISECONDS);
-        try {
-            this.scheduler.wait(this.duration);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        this.scheduler.shutdown();
-        sendBroadcast(new TerminateBroadcast());
-        terminate();
     }
 }

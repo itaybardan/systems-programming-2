@@ -1,10 +1,11 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.messages.TestModelEvent;
-import bgu.spl.mics.application.messages.TickBroadcast;
-import bgu.spl.mics.application.messages.TrainModelEvent;
+import bgu.spl.mics.application.messages.events.TestModelEvent;
+import bgu.spl.mics.application.messages.broadcasts.TickBroadcast;
+import bgu.spl.mics.application.messages.events.TrainModelEvent;
 import bgu.spl.mics.application.objects.GPU;
+import bgu.spl.mics.application.objects.ModelStatus;
 import bgu.spl.mics.application.objects.Student;
 
 /**
@@ -31,17 +32,17 @@ public class GPUService extends MicroService {
         });
 
         this.subscribeEvent(TestModelEvent.class, testModelMessage -> {
-            if (testModelMessage.getStudent().getStatus() == Student.Degree.PhD) {
+            if (testModelMessage.getStatus() == Student.Degree.PhD) {
                 if (Math.random() <= 0.8) {
-                    this.complete(testModelMessage, "Good");
+                    this.complete(testModelMessage, ModelStatus.Good);
                 } else {
-                    this.complete(testModelMessage, "Bad");
+                    this.complete(testModelMessage, ModelStatus.Bad);
                 }
-            } else if (testModelMessage.getStudent().getStatus() == Student.Degree.MSc) {
+            } else if (testModelMessage.getStatus() == Student.Degree.MSc) {
                 if (Math.random() <= 0.6) {
-                    this.complete(testModelMessage, "Good");
+                    this.complete(testModelMessage, ModelStatus.Good);
                 } else {
-                    this.complete(testModelMessage, "Bad");
+                    this.complete(testModelMessage, ModelStatus.Bad);
                 }
             }
         });
