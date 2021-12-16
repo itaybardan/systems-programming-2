@@ -1,46 +1,55 @@
 package bgu.spl.mics.application.objects;
 
 import java.util.Locale;
-
-/**
- * Passive object representing a Deep Learning model.
- * Add all the fields described in the assignment as private fields.
- * Add fields and methods to this class as you see fit (including public methods and constructors).
- */
-enum ModelType{
-    images, tabular, text
-}
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Model {
-    private String name;
-    private ModelType type;
-    private int size;
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
+    private final String name;
+    private final ModelType type;
+    private final int size;
+    private final AtomicReference<TestStatus> testStatus;
+    private final AtomicReference<ModelStatus> modelStatus;
+    public Model(String name, ModelType type, int size) {
         this.name = name;
-    }
-
-
-
-    public int getSize() {
-        return size;
-    }
-
-    public void setSize(int size) {
+        this.type = type;
         this.size = size;
+        testStatus = new AtomicReference<>(TestStatus.Untested);
+        modelStatus = new AtomicReference<>(ModelStatus.Undecided);
     }
+
 
     public Model(String name, String type, int size) {
         this.name = name;
         this.type = ModelType.valueOf(type.toLowerCase(Locale.ROOT));
         this.size = size;
+        testStatus = new AtomicReference<>(TestStatus.Untested);
+        modelStatus = new AtomicReference<>(ModelStatus.Undecided);
+    }
+
+    public String getName() {
+        return name;
     }
 
     public ModelType getType() {
-        return this.type;
+        return type;
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    public ModelStatus getModelStatus() {
+        return modelStatus.get();
+    }
+
+    public void setModelStatus(ModelStatus _status) {
+        if (modelStatus.get() == ModelStatus.Undecided)
+            testStatus.set(TestStatus.Tested);
+        modelStatus.set(_status);
+    }
+
+    public enum TestStatus {
+        Untested, Tested
     }
 }

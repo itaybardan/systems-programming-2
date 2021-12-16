@@ -1,6 +1,7 @@
 package bgu.spl.mics;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A Future object represents a promised result - an object that will
@@ -10,14 +11,16 @@ import java.util.concurrent.TimeUnit;
  * Only private methods may be added to this class.
  * No public constructor is allowed except for the empty constructor.
  */
+
 public class Future<T> {
-    private T result;
+
+    private AtomicReference<T> result = new AtomicReference<>();
 
     /**
-     * This should be the only public constructor in this class.
+     * This should be the the only public constructor in this class.
      */
     public Future() {
-        //TODO: implement this
+
     }
 
     /**
@@ -27,37 +30,41 @@ public class Future<T> {
      * <p>
      *
      * @return return the result of type T if it is available, if not wait until it is available.
-     *
-     * @post isDone() == True
-     * @post result != null
      */
-    public T get() {
-        //TODO: implement this.
-        return null;
+    public synchronized T get() {
+
+        if (result.get() == null) {
+            try {
+                wait(); //Will wait indefinitely until either notify() is called. will also release monitor key in the meantime
+            } catch (InterruptedException e) {
+            }
+        }
+        return result.get(); //it;s still not updated
     }
+
 
     /**
      * Resolves the result of this Future object.
      *
-     * @post result != null
-     * @post isDone() == True
+     * @pre this.result = null;
+     * @post this.result != null;
      */
-    public void resolve(T result) {
-        //TODO: implement this.
+    public synchronized void resolve(T _result) {
+        if (this.result.get() == null && _result != null) {
+            result.set(_result);
+            notifyAll();
+        }
     }
+
 
     /**
      * @return true if this object has been resolved, false otherwise
-     *
-     * @post @post(isDone()) == @pre(isDone())
      */
     public boolean isDone() {
-        //TODO: implement this.
-        return false;
+        return result.get() != null;
     }
 
     /**
-     *
      * retrieves the result the Future object holds if it has been resolved,
      * This method is non-blocking, it has a limited amount of time determined
      * by {@code timeout}
@@ -68,11 +75,20 @@ public class Future<T> {
      * @return return the result of type T if it is available, if not,
      * wait for {@code timeout} TimeUnits {@code unit}. If time has
      * elapsed, return null.
-     *
-     * @post @post(currentTime) - @pre(currentTime) <= (unit * timeout)
      */
-    public T get(long timeout, TimeUnit unit) {
-        //TODO: implement this.
-        return null;
+    public synchronized T get(long timeout, TimeUnit unit) {
+        if (result.get() != null) {
+            return result.get();
+        }
+
+        try {
+            wait(TimeUnit.MILLISECONDS.convert(timeout, unit));
+        } catch (Exception e) {
+            System.out.println(Thread.currentThread().getId());
+            return result.get(); //it;s still not updated
+        }
+        //System.out.println(Thread.currentThread().getId());
+        return null; //Waited  the needed time, but there's still not result.
     }
+
 }

@@ -6,7 +6,7 @@ import bgu.spl.mics.application.services.*;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import jdk.internal.net.http.common.Pair;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -20,38 +20,21 @@ import java.util.ArrayList;
  */
 public class CRMSRunner {
 
-    private static class InputInfo {
-        private final ArrayList<Student> students;
-        private final ArrayList<ConferenceInformation> conferences;
-        private final int duration;
-        private final int tickTime;
-        private final ArrayList<GPU> gpus;
-        private final ArrayList<CPU> cpus;
-
-        public InputInfo(ArrayList<Student> students, ArrayList<ConferenceInformation> conferences, int duration, int tickTime, ArrayList<GPU> gpus, ArrayList<CPU> cpus) {
-            this.students = students;
-            this.conferences = conferences;
-            this.duration = duration;
-            this.tickTime = tickTime;
-            this.cpus = cpus;
-            this.gpus = gpus;
-        }
-    }
-
     public static void main(String[] args) {
         InputInfo inputInfo = parseJsonInputFile();
-        Pair<ArrayList<MicroService>, TimeService> microServicesPair = createMicroServices(inputInfo);
-        initMicroServices(microServicesPair.first, microServicesPair.second);
+        ImmutablePair<ArrayList<MicroService>, TimeService> microServicesPair = createMicroServices(inputInfo);
+        initMicroServices(microServicesPair.getLeft(), microServicesPair.getRight());
     }
 
-    private static Pair<ArrayList<MicroService>, TimeService> createMicroServices(InputInfo inputInfo) {
+    private static ImmutablePair<ArrayList<MicroService>, TimeService> createMicroServices(InputInfo inputInfo) {
         ArrayList<MicroService> microServices = new ArrayList<>();
         for (Student student : inputInfo.students) {
-            microServices.add(new StudentService(student.getName(), student));
+            microServices.add(new StudentService(student));
         }
 
         for (ConferenceInformation conferenceInformation : inputInfo.conferences) {
-            microServices.add(new ConferenceService(conferenceInformation.getName(), conferenceInformation));
+            // TODO: what did you meant here guy? what is the start time and why do we need it? i set it to 0 meantime.
+            microServices.add(new ConferenceService(conferenceInformation.getName(), conferenceInformation, 0));
         }
 
         for (int i = 0; i < inputInfo.cpus.size(); i++) {
@@ -66,7 +49,7 @@ public class CRMSRunner {
 
         TimeService timeService = new TimeService("time-service", inputInfo.duration, inputInfo.tickTime);
 
-        return new Pair(microServices, timeService);
+        return new ImmutablePair<>(microServices, timeService);
     }
 
     private static void initMicroServices(ArrayList<? extends MicroService> microServices, TimeService ts) {
@@ -89,11 +72,6 @@ public class CRMSRunner {
             timeServiceThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }
-
-        // set terminate in all ms
-        for (MicroService ms : microServices) {
-            ms.setTerminated(true);
         }
 
         // wait for the ms threads to finish
@@ -143,10 +121,28 @@ public class CRMSRunner {
                         modelInfoObject.get("type").getAsString(), modelInfoObject.get("size").getAsInt()));
             }
             students.add(new Student(studentInfoObject.get("name").getAsString(), studentInfoObject.get("department").getAsString(),
-                    studentInfoObject.get("status").getAsString(), models, 0, 0));
+                    studentInfoObject.get("status").getAsString(), models));
 
         }
 
         return new CRMSRunner.InputInfo(students, conferences, duration, ticks, gpus, cpus);
+    }
+
+    private static class InputInfo {
+        private final ArrayList<Student> students;
+        private final ArrayList<ConferenceInformation> conferences;
+        private final int duration;
+        private final int tickTime;
+        private final ArrayList<GPU> gpus;
+        private final ArrayList<CPU> cpus;
+
+        public InputInfo(ArrayList<Student> students, ArrayList<ConferenceInformation> conferences, int duration, int tickTime, ArrayList<GPU> gpus, ArrayList<CPU> cpus) {
+            this.students = students;
+            this.conferences = conferences;
+            this.duration = duration;
+            this.tickTime = tickTime;
+            this.cpus = cpus;
+            this.gpus = gpus;
+        }
     }
 }

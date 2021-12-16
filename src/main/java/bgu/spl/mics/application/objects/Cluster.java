@@ -1,8 +1,6 @@
 package bgu.spl.mics.application.objects;
 
 
-import bgu.spl.mics.MessageBusImpl;
-
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -15,12 +13,14 @@ import java.util.Queue;
  * Add fields and methods to this class as you see fit (including public methods and constructors).
  */
 public class Cluster {
+    public final Queue<DataBatch> unProcessedDataBatches;
+    public final Queue<DataBatch> processedDataBatches;
     private ArrayList<GPU> gpus;
     private ArrayList<CPU> cpus;
-    public final Queue<DataBatch> unProcessedDataBatches;
-    public Queue<DataBatch> processedDataBatches;
-    private static class ClusterInstanceHolder {
-        private static final Cluster clusterInstance = new Cluster();
+
+    public Cluster() {
+        this.unProcessedDataBatches = new LinkedList<>();
+        this.processedDataBatches = new LinkedList<>();
     }
 
     /**
@@ -30,9 +30,8 @@ public class Cluster {
         return Cluster.ClusterInstanceHolder.clusterInstance;
     }
 
-    public Cluster() {
-        this.unProcessedDataBatches = new LinkedList<>();
-        this.processedDataBatches = new LinkedList<>();
+    private static class ClusterInstanceHolder {
+        private static final Cluster clusterInstance = new Cluster();
     }
 
 

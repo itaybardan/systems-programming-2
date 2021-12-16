@@ -1,6 +1,7 @@
 package bgu.spl.mics;
 
 
+import bgu.spl.mics.application.broadcasts.TerminateBroadcast;
 import org.apache.commons.lang3.tuple.MutablePair;
 
 import java.util.Map;
@@ -19,161 +20,181 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class MessageBusImpl implements MessageBus {
 
-    private final ConcurrentHashMap<Class<? extends Broadcast>, CopyOnWriteArrayList<MicroService>> broadcastSubscribers;
-    private final ConcurrentHashMap<MicroService, CopyOnWriteArrayList<Message>> microServicesMessages;
-    private final ConcurrentHashMap<Class<? extends Event<?>>, CopyOnWriteArrayList<MicroService>> eventSubscribers;
 
-    private static class MessageBusHolder {
-        private static final MessageBusImpl messageBusInstance = new MessageBusImpl();
-    }
+    private Map<Class<? extends Event>, MutablePair<CopyOnWriteArrayList<MicroService>, AtomicInteger>> event_subscribers; //READ BELOW
+    //this hashmap will contain all the event classes, and for each, a pair of:all the subscribed microservices for that event class,
+    //and the counter needed for the round-robin implementation.
+
+    private Map<Class<? extends Broadcast>, CopyOnWriteArrayList<MicroService>> broadcast_subscribers;
+
+    private ConcurrentHashMap<MicroService, CopyOnWriteArrayList<Message>> messagesQueue;
 
     private MessageBusImpl() {
-        this.broadcastSubscribers = new ConcurrentHashMap<>();
-        this.microServicesMessages = new ConcurrentHashMap<>();
-        this.eventSubscribers = new ConcurrentHashMap<>();
+        event_subscribers = new ConcurrentHashMap<>();
+        broadcast_subscribers = new ConcurrentHashMap<>();
+        messagesQueue = new ConcurrentHashMap<>();
     }
 
     public static MessageBusImpl getInstance() {
         return MessageBusHolder.messageBusInstance;
     }
 
-    public boolean isEventSubscribersEmpty(Class<? extends Event<?>> event) {
-        CopyOnWriteArrayList<MicroService> result = eventSubscribers.getOrDefault(event, new CopyOnWriteArrayList<>());
-        return result.isEmpty();
+    //Basic Queries
+    public boolean isEventSubsEmpty(Class<? extends Event> type) {
+        if (event_subscribers.get(type) == null) return true;
+        return event_subscribers.get(type).getKey().isEmpty();
     }
 
-    public boolean isBroadcastSubsEmpty(Class<? extends Broadcast> event) {
-        if (broadcastSubscribers.get(event) == null) return true;
-        return broadcastSubscribers.get(event).isEmpty();
+    public boolean isBroadcastSubsEmpty(Class<? extends Broadcast> type) {
+        if (broadcast_subscribers.get(type) == null) return true;
+        return broadcast_subscribers.get(type).isEmpty();
     }
 
     public boolean isRegistered(MicroService m) {
-        return microServicesMessages.containsKey(m);
+        return messagesQueue.containsKey(m);
     }
 
-    public boolean isEventProcessed(Event<?> event) {
-        for (MicroService m : microServicesMessages.keySet()) {
-            if (microServicesMessages.get(m).contains(event)) return true;
+    public boolean isEventProcessed(Event event) {
+        for (MicroService m : messagesQueue.keySet()) {
+            if (messagesQueue.get(m).contains(event)) return true;
         }
         return false;
     }
 
     public boolean isBroadcastProcessed(Broadcast broadcast) {
-        for (MicroService m : microServicesMessages.keySet()) {
-            if (microServicesMessages.get(m).contains(broadcast)) return true;
+        for (MicroService m : messagesQueue.keySet()) {
+            if (messagesQueue.get(m).contains(broadcast)) return true;
         }
 
         return false;
     }
 
+    public Boolean isMessageQueueEmpty(MicroService m) { //Will be used by micro services which have other tasks they need to work on, not via the buss
+
+        if (!messagesQueue.containsKey(m)) return true;
+        return messagesQueue.get(m).size() == 0;
+    }
+
     //Methods
     @Override
-    public <T> void subscribeEvent(Class<? extends Event<T>> event, MicroService m) {
+    public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
         MutablePair<CopyOnWriteArrayList<MicroService>, AtomicInteger> temp_pair;
-        if (!eventSubscribers.containsKey(event)) { //The event is not registered yet in the map.
+
+        if (!event_subscribers.containsKey(type)) { //The event is not registered yet in the map.
             temp_pair = new MutablePair<>(new CopyOnWriteArrayList<>(), new AtomicInteger(0)); // counter represents the current micro service to give an event
             temp_pair.getKey().add(m); //Add the micro service to the list that represents all the subscribed micro services for this event type
-            eventSubscribers.put(event, temp_pair);
+            event_subscribers.put(type, temp_pair);
 
         } else {
-
-            CopyOnWriteArrayList<MicroService> temp_array = eventSubscribers.get(event).getKey(); //The event exists and is already initialized in the map.
-            temp_array.add(m);
-
+            //The event exists and is already initialized in the map.
+            event_subscribers.get(type).getKey().add(m);
         }
     }
 
-
     @Override
-    public void subscribeBroadcast(Class<? extends Broadcast> event, MicroService m) {
+    public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
         CopyOnWriteArrayList<MicroService> temp_array;
-        if (!broadcastSubscribers.containsKey(event)) { //The broadcast is not registered yet in the map.
+        if (!broadcast_subscribers.containsKey(type)) { //The broadcast is not registered yet in the map.
             temp_array = new CopyOnWriteArrayList<>();
             temp_array.add(m);
-            broadcastSubscribers.put(event, temp_array);
+            broadcast_subscribers.put(type, temp_array);
 
         } else {
             //The broadcast exists and is already initialized in the map.
-            broadcastSubscribers.get(event).add(m);
+            broadcast_subscribers.get(type).add(m);
         }
     }
 
     @Override
-    public <T> void complete(Event<T> e, T result) { // needs to somehow connect with the MS that send the event.
+    public <T> void complete(Event<T> e, T result) {
         e.getFuture().resolve(result);
 
     }
 
     @Override
     public void sendBroadcast(Broadcast b) {
-        for (MicroService m : broadcastSubscribers.get(b.getClass())) {
-            m.notifyMicroService();
+        Class<? extends Broadcast> type = b.getClass();
+
+        if (!broadcast_subscribers.containsKey(type) || broadcast_subscribers.get(type).size() == 0) return;
+        if (type == TerminateBroadcast.class) {
+            for (MicroService m : broadcast_subscribers.get(type)) {
+                messagesQueue.get(m).clear();
+                messagesQueue.get(m).add(b);
+                m.notifyMicroService();
+
+            }
+
+        } else {
+            for (MicroService m : broadcast_subscribers.get(type)) {
+                messagesQueue.get(m).add(b);
+                m.notifyMicroService();
+            }
         }
     }
 
-
     @Override
     public <T> Future<T> sendEvent(Event<T> e) {
-        if (!eventSubscribers.containsKey(e.getClass()))
-            return null;
+        Class<? extends Event> type = e.getClass();
 
-        CopyOnWriteArrayList<MicroService> subscribers = this.microServicesMessages.getOrDefault(e, new Map<Event<?>, CopyOnWriteArrayList<MicroService>())
-        CopyOnWriteArrayList<MicroService> microServicesList = eventSubscribers.get(event).getKey();
-        int counter = eventSubscribers.get(event).getValue().get();
-        microServicesMessages.get(microServicesList.get(counter)).add(e);
-        eventSubscribers.get(event).getValue().set((counter + 1) % (eventSubscribers.get(event).getKey().size())); //increase the counter
+        if (!event_subscribers.containsKey(type) || event_subscribers.get(type).getKey().size() == 0) {
+            return new Future<>();
+        }
 
+        CopyOnWriteArrayList<MicroService> microServiceList = event_subscribers.get(type).getKey();
+        int counter = event_subscribers.get(type).getValue().get();
+        messagesQueue.get(microServiceList.get(counter)).add(e);
+        microServiceList.get(counter).notifyMicroService();
+        event_subscribers.get(type).getValue().set((counter + 1) % (event_subscribers.get(type).getKey().size())); //increase the counter
 
-        microServicesList.get(counter).notifyMicroService();
-
-        Future<T> future = new Future(); //e.setFuture?
-        return future;
+        return new Future<T>();
     }
 
     @Override
     public void register(MicroService m) {
-        if (microServicesMessages.containsKey(m)) return; //This microservice is already implemented, do nothing.
-        microServicesMessages.put(m, new CopyOnWriteArrayList<>());
+        messagesQueue.put(m, new CopyOnWriteArrayList<>());
     }
 
     @Override
     public void unregister(MicroService m) {
-        for (Class<? extends Event<?>> type : m.getEventsSubs()) {
-            if (type != null && eventSubscribers.containsKey(type)) { // meaning this micro service is registered to the event subscribers of said event.
-                //TODO when we initialize a micro service, we subscribe to the appropriate event and initialize it's event_sub field.
-                eventSubscribers.get(type).getKey().remove(m);
-                int prev_counter = eventSubscribers.get(type).getValue().get();
-                System.out.println(prev_counter);
-                if (prev_counter == eventSubscribers.get(type).getKey().size() && prev_counter != 0) //The counter's value is now illegal, for example it's 5 while there are now 5 MS's
-                    eventSubscribers.get(type).getValue().set(prev_counter - 1);
+
+        for (Class<? extends Message> type : m.getMessagesCallbacks()) {
+            if (type == null) continue;
+
+            if (event_subscribers.containsKey(type) && event_subscribers.get(type).getKey().contains(m)) { // meaning this micro service is registered to the event subscribers of said event.
+                synchronized (event_subscribers) {
+                    event_subscribers.get(type).getKey().remove(m);
+                    int prev_counter = event_subscribers.get(type).getValue().get();
+                    if (prev_counter == event_subscribers.get(type).getKey().size() && prev_counter != 0) //The counter's value is now illegal, for example it's 5 while there are now 5 MS's, OR now there are no more MS's registered
+                        event_subscribers.get(type).getValue().set(prev_counter - 1);
+                }
+            } else if (broadcast_subscribers.containsKey(type) && broadcast_subscribers.get(type).contains(m)) { // meaning this microservice is registered to the broadcast subs of said broadcast.
+                broadcast_subscribers.get(type).remove(m);
             }
+
+            messagesQueue.remove(m); //Finally, remove the message queue of the microservice.
         }
 
-        for (Class<? extends Broadcast> type : m.getBroadcastsSubs()) {
-            if (type != null && broadcastSubscribers.containsKey(type) && broadcastSubscribers.get(type).contains(m)) { // meaning this micro service is registered to the broadcast subs of said broadcast.
-                //TODO when we initialize a micro service, we subscribe to the appropriate broadcast and initialize it's broadcast_sub field.
-                broadcastSubscribers.get(type).remove(m);
-            }
-        }
-        microServicesMessages.remove(m); //Finally, remove the message queue of said microservice.
     }
 
     @Override
-    public Message awaitMessage(MicroService m) { //TODO find a better way than synchronized that can use wait() func
+    public Message awaitMessage(MicroService m) throws InterruptedException {
+
+        if (!isRegistered(m)) throw new IllegalStateException(); // this microservice does not exist
 
         synchronized (m) {
-            if (!microServicesMessages.containsKey(m))
-                throw new IllegalStateException(); // this microservice does not exist
+            while (messagesQueue.get(m).size() == 0) {
 
-            if (microServicesMessages.get(m).size() == 0) {
-                try {
-                    wait(); // will be notified when it gets a message. no need to be in a while loop since only this method can remove from m's queue
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                m.wait(); // will be notified when it gets an message. no need to be in a while loop since only this method can remove from m's queue
             }
-            return microServicesMessages.get(m).remove(0);
+
+            return messagesQueue.get(m).remove(0);
 
         }
     }
+
+    private static class MessageBusHolder {
+        private static final MessageBusImpl messageBusInstance = new MessageBusImpl();
+
+    }
+
 }

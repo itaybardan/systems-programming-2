@@ -34,16 +34,13 @@ public class GPUService extends MicroService {
             if (testModelMessage.getStudent().getStatus() == Student.Degree.PhD) {
                 if (Math.random() <= 0.8) {
                     this.complete(testModelMessage, "Good");
-                }
-                else {
+                } else {
                     this.complete(testModelMessage, "Bad");
                 }
-            }
-            else if (testModelMessage.getStudent().getStatus() == Student.Degree.MSc) {
+            } else if (testModelMessage.getStudent().getStatus() == Student.Degree.MSc) {
                 if (Math.random() <= 0.6) {
                     this.complete(testModelMessage, "Good");
-                }
-                else {
+                } else {
                     this.complete(testModelMessage, "Bad");
                 }
             }

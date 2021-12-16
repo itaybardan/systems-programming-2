@@ -3,8 +3,6 @@ package bgu.spl.mics.example.services;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.example.messages.ExampleBroadcast;
 
-import java.util.HashMap;
-
 public class ExampleBroadcastListenerService extends MicroService {
 
     private int mbt;
@@ -30,6 +28,7 @@ public class ExampleBroadcastListenerService extends MicroService {
     @Override
     protected void initialize() {
         System.out.println("Listener " + getName() + " started");
+
         subscribeBroadcast(ExampleBroadcast.class, message -> {
             mbt--;
             System.out.println("Listener " + getName() + " got a new message from " + message.getSenderId() + "! (mbt: " + mbt + ")");

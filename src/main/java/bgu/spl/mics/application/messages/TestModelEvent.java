@@ -1,18 +1,16 @@
 package bgu.spl.mics.application.messages;
+
 import bgu.spl.mics.Event;
 import bgu.spl.mics.Future;
 import bgu.spl.mics.application.objects.Model;
-import bgu.spl.mics.application.objects.Student;
 
 public class TestModelEvent implements Event<String> {
-    private Model model;
-    private Student student;
+    private final Model model;
     private Future<String> future;
 
-    public TestModelEvent(Model model, Student student, Future<String> future){
+    public TestModelEvent(Model model) {
         this.model = model;
-        this.student = student;
-        this.future = future;
+        future = new Future<>();
     }
 
     @Override
@@ -23,10 +21,6 @@ public class TestModelEvent implements Event<String> {
     @Override
     public void setFuture(Future<String> future) {
         this.future = future;
-    }
-
-    public Student getStudent() {
-        return this.student;
     }
 
     public Model getModel() {

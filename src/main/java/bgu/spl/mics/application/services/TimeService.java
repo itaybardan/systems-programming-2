@@ -1,9 +1,9 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.broadcasts.TerminateBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 
-import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -11,9 +11,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
- * TimeService is the global system timer There is only one instance of this micro-service.
+ * TimeService is the global system timer There is only one instance of this microservice.
  * It keeps track of the amount of ticks passed since initialization and notifies
- * all other micro-services about the current time tick using {@link TickBroadcast}.
+ * all other microservices about the current time tick using {@link TickBroadcast}.
  * This class may not hold references for objects which it is not responsible for.
  * <p>
  * You can add private fields and public methods to this class.
@@ -23,8 +23,8 @@ public class TimeService extends MicroService {
     private static final Logger LOGGER = Logger.getLogger(TimeService.class.getName());
     private final int duration;
     private final int tickTime;
-    private int currentTick;
     private final ScheduledExecutorService scheduler;
+    private int currentTick;
 
 
     public TimeService(String name, int duration, int tickTime) {
@@ -52,6 +52,7 @@ public class TimeService extends MicroService {
             e.printStackTrace();
         }
         this.scheduler.shutdown();
+        sendBroadcast(new TerminateBroadcast());
         terminate();
     }
 }

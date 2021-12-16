@@ -3,9 +3,9 @@ package bgu.spl.mics.example.messages;
 import bgu.spl.mics.Event;
 import bgu.spl.mics.Future;
 
-public class ExampleEvent implements Event<String>{
+public class ExampleEvent implements Event<String> {
 
-    private String senderName; //will be added
+    private final String senderName; //will be added
 
     private Future<String> future;
 
@@ -18,7 +18,7 @@ public class ExampleEvent implements Event<String>{
     }
 
 
-    public Future<String> getFuture(){
+    public Future<String> getFuture() {
         return future;
     }
 

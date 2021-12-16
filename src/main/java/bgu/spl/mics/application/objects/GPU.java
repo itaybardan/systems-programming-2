@@ -1,6 +1,9 @@
 package bgu.spl.mics.application.objects;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -9,20 +12,20 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Add fields and methods to this class as you see fit (including public methods and constructors).
  */
 public class GPU {
-    public static Map<Type, Integer> typeToTrainTickTime = new HashMap<Type, Integer>() {{
+    public static final Map<Type, Integer> typeToTrainTickTime = new HashMap<Type, Integer>() {{
         put(Type.RTX3090, 1);
         put(Type.RTX2080, 2);
         put(Type.GTX1080, 4);
     }};
-    public static Map<Type, Integer> typeToProcessedDataCapacity = new HashMap<Type, Integer>() {{
+    public static final Map<Type, Integer> typeToProcessedDataCapacity = new HashMap<Type, Integer>() {{
         put(Type.RTX3090, 32);
         put(Type.RTX2080, 16);
         put(Type.GTX1080, 8);
     }};
+    public AtomicInteger ticks;
     private Type type;
     private Cluster cluster;
     private LinkedList<DataBatch> processedData;
-    public AtomicInteger ticks;
 
     /**
      * @inv getAvailableProcessedDataSpace() >= 0
@@ -68,9 +71,9 @@ public class GPU {
         }
 
         while (!dataBatches.isEmpty()) {
-                if (this.getAvailableProcessedDataSpace() > 0) {
-                    this.sendDataBatchToCluster(dataBatches.poll());
-                }
+            if (this.getAvailableProcessedDataSpace() > 0) {
+                this.sendDataBatchToCluster(dataBatches.poll());
+            }
         }
 
     }
@@ -95,12 +98,12 @@ public class GPU {
         this.processedData.add(db);
     }
 
-    enum Type {RTX3090, RTX2080, GTX1080}
-
     public void increaseTicks() {
         int currentTicks;
         do {
             currentTicks = this.ticks.get();
         } while (!this.ticks.compareAndSet(currentTicks, currentTicks + 1));
     }
+
+    enum Type {RTX3090, RTX2080, GTX1080}
 }

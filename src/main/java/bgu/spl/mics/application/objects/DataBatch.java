@@ -7,13 +7,14 @@ package bgu.spl.mics.application.objects;
 
 public class DataBatch {
     public static int size = 1000;
+    private final int startIndex;
     private Data data;
-    private int startIndex;
 
     public DataBatch(int startIndex) {
         this.startIndex = startIndex;
 
     }
+
     public Data getData() {
         return this.data;
     }

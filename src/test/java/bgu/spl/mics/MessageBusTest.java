@@ -1,7 +1,8 @@
 package bgu.spl.mics;
 
-import bgu.spl.mics.application.services.StudentService;
-import bgu.spl.mics.example.services.ExampleMicroService;
+
+import bgu.spl.mics.application.broadcasts.TickBroadcast;
+import bgu.spl.mics.application.events.TrainModelEvent;
 import bgu.spl.mics.example.messages.ExampleBroadcast;
 import bgu.spl.mics.example.messages.ExampleEvent;
 import org.junit.Before;
@@ -9,35 +10,66 @@ import org.junit.Test;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static junit.framework.TestCase.*;
-import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.*;
 
 
-public class MessageBusTest {
-    private MessageBusImpl messageBus;
-    private ExampleEvent event;
-    private ExampleBroadcast broadcast;
-    private ExampleMicroService microService;
+class ExampleMicroService extends MicroService {
+    /**
+     * @param name the microservice name (used mainly for debugging purposes -
+     *             does not have to be unique)
+     */
+
+
+    public ExampleMicroService(String name) {
+        super(name);
+
+        messages_callbacks.put(ExampleEvent.class, (Object s) -> System.out.println(s));
+        messages_callbacks.put(ExampleBroadcast.class, (Object s) -> System.out.println(s));
+        messages_callbacks.put(TickBroadcast.class, (Object s) -> System.out.println("time tick"));
+    }
+
+    @Override
+    protected synchronized void initialize() {//Only synchronized for this test!
+        try {
+            wait();
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public synchronized void notifyMicroService() { //Used by bus when sending events/broadcasts to this micro service.
+
+        notifyAll();
+    }
+}
+
+public class MessageBusTest { //each test needs to be done separately as MessageBusImpl is a singleton
+
+
+    MessageBusImpl messageBus;
+    ExampleEvent event;
+    ExampleBroadcast broadcast;
+    bgu.spl.mics.example.ExampleMicroService microService;
 
     @Before
     public void setUp() {
-        this.messageBus = MessageBusImpl.getInstance();
-        this.event = new ExampleEvent("test_event");
-        this.broadcast = new ExampleBroadcast("test_broadcast");
-        this.microService = new ExampleMicroService("test_micro_service");
+        messageBus = MessageBusImpl.getInstance();
+        event = new ExampleEvent("test_event");
+        broadcast = new ExampleBroadcast("test_broadcast");
+        microService = new bgu.spl.mics.example.ExampleMicroService("test_micro_service");
     }
 
     @Test
     public void subscribeEventTest() {
 
-        assertTrue(messageBus.isEventSubscribersEmpty(event.getClass()));
+        assertTrue(messageBus.isEventSubsEmpty(TrainModelEvent.class));
         messageBus.register(microService);
 
         messageBus.subscribeEvent(event.getClass(), microService);
-        assertFalse(messageBus.isEventSubscribersEmpty(event.getClass()));
+        assertFalse(messageBus.isEventSubsEmpty(event.getClass()));
 
-        messageBus.unregister(microService);
-        assertTrue(messageBus.isEventSubscribersEmpty(event.getClass()));
     }
 
     @Test
@@ -82,15 +114,14 @@ public class MessageBusTest {
         });
         thread.start();
 
-        System.out.println(thread.isInterrupted());
+        assertFalse(thread.isInterrupted());
         Thread thread1 = new Thread(() -> messageBus.sendBroadcast(broadcast));
         thread1.start();
 
 
         try {
             thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
         }
 
         assertTrue(wasNotifiedByBroadcast.get());
@@ -100,7 +131,7 @@ public class MessageBusTest {
     }
 
     @Test
-    public void sendBEventTest() {
+    public void sendEventTest() {
         assertFalse(messageBus.isEventProcessed(event));
 
         messageBus.register(microService);
@@ -108,6 +139,7 @@ public class MessageBusTest {
         messageBus.sendEvent(event);
 
         assertTrue(messageBus.isEventProcessed(event));
+        messageBus.unregister(microService);
 
     }
 
@@ -115,11 +147,19 @@ public class MessageBusTest {
     public void registerTest() {
 
 
-        assertFalse(messageBus.isRegistered(microService));
+        bgu.spl.mics.example.ExampleMicroService microService2 = new bgu.spl.mics.example.ExampleMicroService("test");
+
         messageBus.register(microService);
+        messageBus.register(microService2);
         assertTrue(messageBus.isRegistered(microService));
+        assertTrue(messageBus.isRegistered(microService2));
 
         messageBus.unregister(microService);
+        assertFalse(messageBus.isRegistered(microService));
+        assertTrue(messageBus.isRegistered(microService2));
+
+        messageBus.unregister(microService2);
+        assertFalse(messageBus.isRegistered(microService2));
 
     }
 
@@ -140,31 +180,33 @@ public class MessageBusTest {
         messageBus = MessageBusImpl.getInstance();
 
 
-        StudentService not_exists = new StudentService("not-exists");
-        assertThrows(IllegalStateException.class, () -> messageBus.awaitMessage(not_exists));
-        messageBus.register(microService);
+        bgu.spl.mics.example.ExampleMicroService microService1 = new bgu.spl.mics.example.ExampleMicroService("not_exists");
+        messageBus.unregister(microService1);
+        assertThrows(IllegalStateException.class, () -> messageBus.awaitMessage(microService1));
+        messageBus.register(microService1);
 
 
         Thread thread = new Thread(() -> {
             try {
-                messageBus.awaitMessage(microService);
+                messageBus.awaitMessage(microService1);
             } catch (Exception e) {
-                assertEquals(InterruptedException.class, e.getClass());
+//                assertEquals(InterruptedException.class, e.getClass());
             }
         });
         thread.start(); //No events, the thread will be on wait()
-        thread.interrupt();
 
 
-        messageBus.subscribeEvent(ExampleEvent.class, microService); //This part is still on loop but should work
+        messageBus.subscribeEvent(ExampleEvent.class, microService1); //This part is still on loop but should work
         messageBus.sendEvent(event);
+
         try {
-            assertEquals(event, messageBus.awaitMessage(microService));
+            thread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        assertTrue(messageBus.isMessageQueueEmpty(microService1));
 
 
-        messageBus.unregister(microService);
+        messageBus.unregister(microService1);
     }
 }

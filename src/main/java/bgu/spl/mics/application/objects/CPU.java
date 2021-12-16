@@ -18,10 +18,10 @@ public class CPU {
      */
 
     private final int cores;
+    private final Cluster cluster;
+    public AtomicInteger ticks;
     private LinkedList<DataBatch> unprocessedDataBatch;
     private Queue<Data> processedData;
-    private Cluster cluster;
-    public AtomicInteger ticks;
 
     public CPU(int cores, Cluster cluster) {
         this.cores = cores;
@@ -34,13 +34,6 @@ public class CPU {
      */
     public int getCores() {
         return this.cores;
-    }
-
-    /**
-     * @param unprocessedDataBatch the batch data coming from the cluster
-     */
-    public void setUnprocessedDataBatch(LinkedList<DataBatch> unprocessedDataBatch) {
-        this.unprocessedDataBatch = unprocessedDataBatch;
     }
 
     /**
@@ -65,7 +58,6 @@ public class CPU {
         return this.processedData.size();
     }
 
-
     /**
      * @post getProcessedDataSize() == 0
      * @post getUnprocessedDataSize() == 0
@@ -78,6 +70,12 @@ public class CPU {
         return unprocessedDataBatch;
     }
 
+    /**
+     * @param unprocessedDataBatch the batch data coming from the cluster
+     */
+    public void setUnprocessedDataBatch(LinkedList<DataBatch> unprocessedDataBatch) {
+        this.unprocessedDataBatch = unprocessedDataBatch;
+    }
 
     public int getTicks() {
         return ticks.get();
