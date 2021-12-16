@@ -1,9 +1,9 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.messages.TestModelEvent;
-import bgu.spl.mics.application.messages.TickBroadcast;
-import bgu.spl.mics.application.messages.TrainModelEvent;
+import bgu.spl.mics.application.messages.events.TestModelEvent;
+import bgu.spl.mics.application.messages.broadcasts.TickBroadcast;
+import bgu.spl.mics.application.messages.events.TrainModelEvent;
 import bgu.spl.mics.application.objects.GPU;
 import bgu.spl.mics.application.objects.Student;
 

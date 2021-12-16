@@ -1,8 +1,8 @@
 package bgu.spl.mics;
 
 
-import bgu.spl.mics.application.broadcasts.TickBroadcast;
-import bgu.spl.mics.application.events.TrainModelEvent;
+import bgu.spl.mics.application.messages.broadcasts.TickBroadcast;
+import bgu.spl.mics.application.messages.events.TrainModelEvent;
 import bgu.spl.mics.example.messages.ExampleBroadcast;
 import bgu.spl.mics.example.messages.ExampleEvent;
 import org.junit.Before;

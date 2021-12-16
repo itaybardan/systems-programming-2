@@ -1,8 +1,8 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.broadcasts.TerminateBroadcast;
-import bgu.spl.mics.application.messages.TickBroadcast;
+import bgu.spl.mics.application.messages.broadcasts.TerminateBroadcast;
+import bgu.spl.mics.application.messages.broadcasts.TickBroadcast;
 
 import java.util.TimerTask;
 import java.util.concurrent.Executors;

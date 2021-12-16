@@ -1,4 +1,4 @@
-package bgu.spl.mics.application.broadcasts;
+package bgu.spl.mics.application.messages.broadcasts;
 
 import bgu.spl.mics.Broadcast;
 import bgu.spl.mics.application.objects.Model;

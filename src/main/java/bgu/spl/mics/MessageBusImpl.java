@@ -1,7 +1,7 @@
 package bgu.spl.mics;
 
 
-import bgu.spl.mics.application.broadcasts.TerminateBroadcast;
+import bgu.spl.mics.application.messages.broadcasts.TerminateBroadcast;
 import org.apache.commons.lang3.tuple.MutablePair;
 
 import java.util.Map;

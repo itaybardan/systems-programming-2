@@ -2,9 +2,9 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.Callback;
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.broadcasts.PublishConferenceBroadcast;
-import bgu.spl.mics.application.broadcasts.TickBroadcast;
-import bgu.spl.mics.application.events.PublishResultsEvent;
+import bgu.spl.mics.application.messages.broadcasts.PublishConferenceBroadcast;
+import bgu.spl.mics.application.messages.broadcasts.TickBroadcast;
+import bgu.spl.mics.application.messages.events.PublishResultsEvent;
 import bgu.spl.mics.application.objects.ConferenceInformation;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -48,7 +48,7 @@ public class ConferenceService extends MicroService {
         //Setting up Callbacks
         Callback<PublishResultsEvent> publishResultsCallback = (PublishResultsEvent e) -> conference.addPublish(e.getModel());
         Callback<TickBroadcast> tickCallback = (TickBroadcast b) -> {
-            currentTime.set(b.time);
+            currentTime.set(b.getTick());
             if (currentTime.get() >= conference.getDate()) {
                 sendBroadcast(new PublishConferenceBroadcast(conference.getAmountOfPublishes(), conference.getPublishes()));
                 terminate();

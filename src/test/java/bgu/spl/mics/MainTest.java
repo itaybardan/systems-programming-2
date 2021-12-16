@@ -1,7 +1,7 @@
 package bgu.spl.mics;
 
-import bgu.spl.mics.application.events.TestModelEvent;
-import bgu.spl.mics.application.events.TrainModelEvent;
+import bgu.spl.mics.application.messages.events.TestModelEvent;
+import bgu.spl.mics.application.messages.events.TrainModelEvent;
 import bgu.spl.mics.application.objects.*;
 import bgu.spl.mics.application.services.ConferenceService;
 import bgu.spl.mics.application.services.StudentService;
@@ -79,9 +79,9 @@ public class MainTest {
     public void beforeTest() {
 
         ArrayList<Model> models = new ArrayList<Model>();
-        Model m1 = new Model("test1", ModelType.Images, 10000);
-        Model m2 = new Model("test2", ModelType.Tabular, 20000);
-        Model m3 = new Model("test3", ModelType.Text, 30000);
+        Model m1 = new Model("test1", ModelType.images, 10000);
+        Model m2 = new Model("test2", ModelType.tabular, 20000);
+        Model m3 = new Model("test3", ModelType.text, 30000);
         models.add(m1);
         models.add(m2);
         models.add(m3);
@@ -107,7 +107,7 @@ public class MainTest {
     public void runTest() {
 
         ExecutorService fixedPool = Executors.newFixedThreadPool(5);
-        timeService = new TimeService(ticks, duration);
+        timeService = new TimeService("time-service-test", ticks, duration);
         fixedPool.execute(timeService);
         fixedPool.execute(exampleGPU);
         fixedPool.execute(conferenceService1);

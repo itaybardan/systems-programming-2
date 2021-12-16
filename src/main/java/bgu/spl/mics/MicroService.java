@@ -1,7 +1,7 @@
 package bgu.spl.mics;
 
 
-import bgu.spl.mics.application.broadcasts.TerminateBroadcast;
+import bgu.spl.mics.application.messages.broadcasts.TerminateBroadcast;
 
 import java.util.HashMap;
 import java.util.Set;
