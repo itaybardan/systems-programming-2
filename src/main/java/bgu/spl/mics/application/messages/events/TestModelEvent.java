@@ -3,26 +3,27 @@ package bgu.spl.mics.application.messages.events;
 import bgu.spl.mics.Event;
 import bgu.spl.mics.Future;
 import bgu.spl.mics.application.objects.Model;
+import bgu.spl.mics.application.objects.ModelStatus;
 import bgu.spl.mics.application.objects.Student;
 
-public class TestModelEvent implements Event<String> {
+public class TestModelEvent implements Event<ModelStatus> {
     private final Model model;
     private final Student.Degree studentDegree;
-    private Future<String> future;
+    private Future<ModelStatus> future;
 
     public TestModelEvent(Model model, Student.Degree studentDegree) {
         this.model = model;
         this.studentDegree = studentDegree;
-        future = new Future<String>();
+        future = new Future<ModelStatus>();
     }
 
     @Override
-    public Future<String> getFuture() {
+    public Future<ModelStatus> getFuture() {
         return this.future;
     }
 
     @Override
-    public void setFuture(Future<String> future) {
+    public void setFuture(Future<ModelStatus> future) {
         this.future = future;
     }
 

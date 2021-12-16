@@ -23,7 +23,9 @@ public class Cluster {
     public ConcurrentHashMap<GPU, CopyOnWriteArrayList<DataBatch>> gpuToProcessedDataBatches;
 
     public Cluster() {
-
+        this.unprocessedDataBatches = new CopyOnWriteArrayList<>();
+        this.dataBatchToGpu = new ConcurrentHashMap<>();
+        this.gpuToProcessedDataBatches = new ConcurrentHashMap<>();
     }
 
     /**

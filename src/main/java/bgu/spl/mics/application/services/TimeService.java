@@ -20,7 +20,7 @@ import java.util.logging.Logger;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class TimeService extends MicroService {
-    private static final Logger LOGGER = Logger.getLogger(TimeService.class.getName());
+    private static final Logger logger = Logger.getLogger(TimeService.class.getName());
     private final int duration;
     private final int tickTime;
     private final ScheduledExecutorService scheduler;
@@ -37,6 +37,7 @@ public class TimeService extends MicroService {
 
     @Override
     protected void initialize() {
+        logger.info(this.name + "has started");
         TimerTask task = new TimerTask() {
             public void run() {
                 sendBroadcast(new TickBroadcast(currentTick));
@@ -49,7 +50,7 @@ public class TimeService extends MicroService {
 
         while (this.currentTick < duration) {
             try {
-                this.scheduler.wait(this.duration);
+                TimeUnit.MILLISECONDS.sleep((long) this.tickTime * this.duration);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

@@ -25,7 +25,6 @@ class ExampleGPU extends MicroService {
      */
     public ExampleGPU(String name) {
         super(name);
-
     }
 
     @Override

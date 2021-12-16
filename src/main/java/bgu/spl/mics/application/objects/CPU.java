@@ -58,6 +58,7 @@ public class CPU {
     public void sendReadyDataBatch() {
         synchronized (this.cluster.gpuToProcessedDataBatches.get(this.cluster.dataBatchToGpu.get(this.dataBatch))) {
             this.cluster.gpuToProcessedDataBatches.get(this.cluster.dataBatchToGpu.get(this.dataBatch)).add(dataBatch);
+            this.cluster.dataBatchToGpu.remove(this.dataBatch);
             this.cluster.gpuToProcessedDataBatches.get(this.cluster.dataBatchToGpu.get(this.dataBatch)).notify();
         }
     }

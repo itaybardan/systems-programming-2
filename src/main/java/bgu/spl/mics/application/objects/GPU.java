@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Passive object representing a single GPU.
@@ -40,7 +41,6 @@ public class GPU {
      */
     public GPU(String type) {
         this.type = Type.valueOf(type);
-        this.availableSpots = GPU.typeToProcessedDataCapacity.get(this.type) - this.processedData.size();
     }
 
 
@@ -64,6 +64,8 @@ public class GPU {
     }
 
     public void startTrainingModel(TrainModelEvent event) {
+        this.processedData = new LinkedList<>();
+        this.availableSpots = GPU.typeToProcessedDataCapacity.get(this.type) - this.processedData.size();
         this.isTrainingModel = true;
         this.event = event;
         Data data = new Data(Data.DataType.valueOf(event.model.getType().toString()), event.model.getSize());
@@ -76,6 +78,7 @@ public class GPU {
             DataBatch dataBatchToSend = dataBatches.remove(0);
             this.cluster.dataBatchToGpu.put(dataBatchToSend, this);
             this.cluster.unprocessedDataBatches.add(dataBatchToSend);
+            this.cluster.gpuToProcessedDataBatches.putIfAbsent(this, new CopyOnWriteArrayList<>());
             this.availableSpots--;
         }
     }

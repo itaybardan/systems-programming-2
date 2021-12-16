@@ -52,7 +52,7 @@ public class StudentService extends MicroService {
 
         Callback<TestModelEvent> testModelCallback = (TestModelEvent e) -> {
             Model model = e.getModel();
-            model.setModelStatus(ModelStatus.valueOf(e.getFuture().get())); //the Future of TestModelEvent will be of type enum ModelStatus - Good or Bad.
+            model.setModelStatus(e.getFuture().get()); //the Future of TestModelEvent will be of type enum ModelStatus - Good or Bad.
 
             if (model.getModelStatus() == ModelStatus.Good) {
                 PublishResultsEvent publishResultsEvent = new PublishResultsEvent(model);

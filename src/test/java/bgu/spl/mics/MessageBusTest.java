@@ -51,14 +51,14 @@ public class MessageBusTest { //each test needs to be done separately as Message
     MessageBusImpl messageBus;
     ExampleEvent event;
     ExampleBroadcast broadcast;
-    bgu.spl.mics.example.ExampleMicroService microService;
+    bgu.spl.mics.ExampleMicroService microService;
 
     @Before
     public void setUp() {
         messageBus = MessageBusImpl.getInstance();
         event = new ExampleEvent("test_event");
         broadcast = new ExampleBroadcast("test_broadcast");
-        microService = new bgu.spl.mics.example.ExampleMicroService("test_micro_service");
+        microService = new bgu.spl.mics.ExampleMicroService("test_micro_service");
     }
 
     @Test
@@ -147,7 +147,7 @@ public class MessageBusTest { //each test needs to be done separately as Message
     public void registerTest() {
 
 
-        bgu.spl.mics.example.ExampleMicroService microService2 = new bgu.spl.mics.example.ExampleMicroService("test");
+        bgu.spl.mics.ExampleMicroService microService2 = new bgu.spl.mics.ExampleMicroService("test");
 
         messageBus.register(microService);
         messageBus.register(microService2);
@@ -180,7 +180,7 @@ public class MessageBusTest { //each test needs to be done separately as Message
         messageBus = MessageBusImpl.getInstance();
 
 
-        bgu.spl.mics.example.ExampleMicroService microService1 = new bgu.spl.mics.example.ExampleMicroService("not_exists");
+        bgu.spl.mics.ExampleMicroService microService1 = new bgu.spl.mics.ExampleMicroService("not_exists");
         messageBus.unregister(microService1);
         assertThrows(IllegalStateException.class, () -> messageBus.awaitMessage(microService1));
         messageBus.register(microService1);
