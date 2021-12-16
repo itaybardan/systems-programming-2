@@ -37,7 +37,7 @@ public class TimeService extends MicroService {
 
     @Override
     protected void initialize() {
-        logger.info(this.name + "has started");
+        logger.info(this.name + " has started");
         TimerTask task = new TimerTask() {
             public void run() {
                 sendBroadcast(new TickBroadcast(currentTick));

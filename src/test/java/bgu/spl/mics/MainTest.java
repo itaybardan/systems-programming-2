@@ -130,11 +130,11 @@ public class MainTest {
 
 
         fixedPool.shutdown();
-        try {
-            fixedPool.awaitTermination(800, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            fixedPool.awaitTermination(800, TimeUnit.MILLISECONDS);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
 
     }
