@@ -33,7 +33,7 @@ public class CRMSRunner {
         }
 
         for (ConferenceInformation conferenceInformation : inputInfo.conferences) {
-            // TODO: what did you meant here guy? what is the start time and why do we need it? i set it to 0 meantime.
+            // TODO: what did you mean here guy? what is the start time and why do we need it? i set it to 0 meantime.
             microServices.add(new ConferenceService(conferenceInformation.getName(), conferenceInformation, 0));
         }
 
@@ -101,7 +101,7 @@ public class CRMSRunner {
 
         ArrayList<CPU> cpus = new ArrayList<>();
         for (JsonElement cpuInfo : rootObject.get("CPUS").getAsJsonArray()) {
-            cpus.add(new CPU(cpuInfo.getAsInt(), new Cluster()));
+            cpus.add(new CPU(cpuInfo.getAsInt()));
         }
 
         ArrayList<ConferenceInformation> conferences = new ArrayList<>();
