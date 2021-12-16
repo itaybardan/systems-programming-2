@@ -1,6 +1,9 @@
 package bgu.spl.mics.application.objects;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -19,10 +22,10 @@ public class GPU {
         put(Type.RTX2080, 16);
         put(Type.GTX1080, 8);
     }};
+    public AtomicInteger ticks;
     private Type type;
     private Cluster cluster;
     private LinkedList<DataBatch> processedData;
-    public AtomicInteger ticks;
 
     /**
      * @inv getAvailableProcessedDataSpace() >= 0
@@ -68,9 +71,9 @@ public class GPU {
         }
 
         while (!dataBatches.isEmpty()) {
-                if (this.getAvailableProcessedDataSpace() > 0) {
-                    this.sendDataBatchToCluster(dataBatches.poll());
-                }
+            if (this.getAvailableProcessedDataSpace() > 0) {
+                this.sendDataBatchToCluster(dataBatches.poll());
+            }
         }
 
     }
@@ -95,12 +98,12 @@ public class GPU {
         this.processedData.add(db);
     }
 
-    enum Type {RTX3090, RTX2080, GTX1080}
-
     public void increaseTicks() {
         int currentTicks;
         do {
             currentTicks = this.ticks.get();
         } while (!this.ticks.compareAndSet(currentTicks, currentTicks + 1));
     }
+
+    enum Type {RTX3090, RTX2080, GTX1080}
 }

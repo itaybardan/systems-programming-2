@@ -8,16 +8,9 @@ public class Model {
     private final String name;
     private final ModelType type;
     private final int size;
-
-    public enum TestStatus{
-        Untested, Tested
-    }
-
     private final AtomicReference<TestStatus> testStatus;
     private final AtomicReference<ModelStatus> modelStatus;
-
-
-    public  Model(String name, ModelType type, int size){
+    public Model(String name, ModelType type, int size) {
         this.name = name;
         this.type = type;
         this.size = size;
@@ -25,7 +18,8 @@ public class Model {
         modelStatus = new AtomicReference<>(ModelStatus.Undecided);
     }
 
-    public  Model(String name, String type, int size){
+
+    public Model(String name, String type, int size) {
         this.name = name;
         this.type = ModelType.valueOf(type.toLowerCase(Locale.ROOT));
         this.size = size;
@@ -49,9 +43,13 @@ public class Model {
         return modelStatus.get();
     }
 
-    public void setModelStatus(ModelStatus _status){
-        if(modelStatus.get() == ModelStatus.Undecided)
+    public void setModelStatus(ModelStatus _status) {
+        if (modelStatus.get() == ModelStatus.Undecided)
             testStatus.set(TestStatus.Tested);
-            modelStatus.set(_status);
+        modelStatus.set(_status);
+    }
+
+    public enum TestStatus {
+        Untested, Tested
     }
 }

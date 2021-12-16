@@ -20,24 +20,6 @@ import java.util.ArrayList;
  */
 public class CRMSRunner {
 
-    private static class InputInfo {
-        private final ArrayList<Student> students;
-        private final ArrayList<ConferenceInformation> conferences;
-        private final int duration;
-        private final int tickTime;
-        private final ArrayList<GPU> gpus;
-        private final ArrayList<CPU> cpus;
-
-        public InputInfo(ArrayList<Student> students, ArrayList<ConferenceInformation> conferences, int duration, int tickTime, ArrayList<GPU> gpus, ArrayList<CPU> cpus) {
-            this.students = students;
-            this.conferences = conferences;
-            this.duration = duration;
-            this.tickTime = tickTime;
-            this.cpus = cpus;
-            this.gpus = gpus;
-        }
-    }
-
     public static void main(String[] args) {
         InputInfo inputInfo = parseJsonInputFile();
         ImmutablePair<ArrayList<MicroService>, TimeService> microServicesPair = createMicroServices(inputInfo);
@@ -144,5 +126,23 @@ public class CRMSRunner {
         }
 
         return new CRMSRunner.InputInfo(students, conferences, duration, ticks, gpus, cpus);
+    }
+
+    private static class InputInfo {
+        private final ArrayList<Student> students;
+        private final ArrayList<ConferenceInformation> conferences;
+        private final int duration;
+        private final int tickTime;
+        private final ArrayList<GPU> gpus;
+        private final ArrayList<CPU> cpus;
+
+        public InputInfo(ArrayList<Student> students, ArrayList<ConferenceInformation> conferences, int duration, int tickTime, ArrayList<GPU> gpus, ArrayList<CPU> cpus) {
+            this.students = students;
+            this.conferences = conferences;
+            this.duration = duration;
+            this.tickTime = tickTime;
+            this.cpus = cpus;
+            this.gpus = gpus;
+        }
     }
 }

@@ -4,17 +4,28 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-
 /**
  * Passive object representing single student.
  * Add fields and methods to this class as you see fit (including public methods and constructors).
  */
 public class Student {
-    /**
-     * Enum representing the Degree the student is studying for.
-     */
-    public enum Degree {
-        MSc, PhD
+    private final String name;
+    private final String department;
+    private final Degree status;
+    private final ArrayList<Model> models;
+    private AtomicInteger publications = new AtomicInteger(0);
+    private AtomicInteger papersRead = new AtomicInteger(0);
+    public Student(String name, String department, String status, ArrayList<Model> models) {
+        this.name = name;
+        this.department = department;
+        this.status = searchEnum(Degree.class, status);
+        this.models = models;
+    }
+    public Student(String name, String department, Degree status, ArrayList<Model> models) {
+        this.name = name;
+        this.department = department;
+        this.status = status;
+        this.models = models;
     }
 
     public static <T extends Enum<?>> T searchEnum(Class<T> enumeration, String search) {
@@ -24,28 +35,6 @@ public class Student {
             }
         }
         return null;
-    }
-
-    private final String name;
-    private final String department;
-    private final Degree status;
-    private AtomicInteger publications = new AtomicInteger(0);
-    private AtomicInteger papersRead = new AtomicInteger(0);
-    private final ArrayList<Model> models;
-
-
-    public Student(String name, String department, String status, ArrayList<Model> models) {
-        this.name = name;
-        this.department = department;
-        this.status = searchEnum(Degree.class, status);
-        this.models = models;
-    }
-
-    public Student(String name, String department, Degree status, ArrayList<Model> models) {
-        this.name = name;
-        this.department = department;
-        this.status = status;
-        this.models = models;
     }
 
     public ArrayList<Model> getModels() {
@@ -70,5 +59,12 @@ public class Student {
 
     public String getDepartment() {
         return department;
+    }
+
+    /**
+     * Enum representing the Degree the student is studying for.
+     */
+    public enum Degree {
+        MSc, PhD
     }
 }

@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * aggregating good results and publishing them via the {@link PublishConferenceBroadcast},
  * after publishing results the conference will unregister from the system.
  * This class may not hold references for objects which it is not responsible for.
- *
+ * <p>
  * You can add private fields and public methods to this class.
  * You MAY change constructor signatures and even add new public constructors.
  */
@@ -34,7 +34,7 @@ public class ConferenceService extends MicroService {
     @Override
     protected void initialize() {
 
-        synchronized (this){
+        synchronized (this) {
             try {
                 Thread.sleep(startTime);
             } catch (InterruptedException e) {
@@ -47,12 +47,12 @@ public class ConferenceService extends MicroService {
 
         //Setting up Callbacks
         Callback<PublishResultsEvent> publishResultsCallback = (PublishResultsEvent e) -> conference.addPublish(e.getModel());
-        Callback<TickBroadcast> tickCallback = (TickBroadcast b) ->{
-          currentTime.set(b.time);
-          if(currentTime.get() >= conference.getDate()){
-              sendBroadcast(new PublishConferenceBroadcast(conference.getAmountOfPublishes(), conference.getPublishes()));
-              terminate();
-          }
+        Callback<TickBroadcast> tickCallback = (TickBroadcast b) -> {
+            currentTime.set(b.time);
+            if (currentTime.get() >= conference.getDate()) {
+                sendBroadcast(new PublishConferenceBroadcast(conference.getAmountOfPublishes(), conference.getPublishes()));
+                terminate();
+            }
         };
 
         //Subscribing to necessary events and broadcasts

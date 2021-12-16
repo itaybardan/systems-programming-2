@@ -4,7 +4,7 @@ package bgu.spl.mics;
 import bgu.spl.mics.application.broadcasts.TerminateBroadcast;
 import org.apache.commons.lang3.tuple.MutablePair;
 
-import java.util.*;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,21 +29,15 @@ public class MessageBusImpl implements MessageBus {
 
     private ConcurrentHashMap<MicroService, CopyOnWriteArrayList<Message>> messagesQueue;
 
-    private static class MessageBusHolder {
-        private static final MessageBusImpl messageBusInstance = new MessageBusImpl();
-
-    }
     private MessageBusImpl() {
         event_subscribers = new ConcurrentHashMap<>();
         broadcast_subscribers = new ConcurrentHashMap<>();
         messagesQueue = new ConcurrentHashMap<>();
     }
 
-
     public static MessageBusImpl getInstance() {
         return MessageBusHolder.messageBusInstance;
     }
-
 
     //Basic Queries
     public boolean isEventSubsEmpty(Class<? extends Event> type) {
@@ -60,14 +54,12 @@ public class MessageBusImpl implements MessageBus {
         return messagesQueue.containsKey(m);
     }
 
-
     public boolean isEventProcessed(Event event) {
         for (MicroService m : messagesQueue.keySet()) {
             if (messagesQueue.get(m).contains(event)) return true;
         }
         return false;
     }
-
 
     public boolean isBroadcastProcessed(Broadcast broadcast) {
         for (MicroService m : messagesQueue.keySet()) {
@@ -77,12 +69,11 @@ public class MessageBusImpl implements MessageBus {
         return false;
     }
 
-    public Boolean isMessageQueueEmpty(MicroService m){ //Will be used by micro services which have other tasks they need to work on, not via the buss
+    public Boolean isMessageQueueEmpty(MicroService m) { //Will be used by micro services which have other tasks they need to work on, not via the buss
 
         if (!messagesQueue.containsKey(m)) return true;
         return messagesQueue.get(m).size() == 0;
     }
-
 
     //Methods
     @Override
@@ -95,11 +86,10 @@ public class MessageBusImpl implements MessageBus {
             event_subscribers.put(type, temp_pair);
 
         } else {
-           //The event exists and is already initialized in the map.
+            //The event exists and is already initialized in the map.
             event_subscribers.get(type).getKey().add(m);
         }
     }
-
 
     @Override
     public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
@@ -125,25 +115,22 @@ public class MessageBusImpl implements MessageBus {
     public void sendBroadcast(Broadcast b) {
         Class<? extends Broadcast> type = b.getClass();
 
-        if(!broadcast_subscribers.containsKey(type) || broadcast_subscribers.get(type).size() ==0) return;
-        if(type == TerminateBroadcast.class){
+        if (!broadcast_subscribers.containsKey(type) || broadcast_subscribers.get(type).size() == 0) return;
+        if (type == TerminateBroadcast.class) {
             for (MicroService m : broadcast_subscribers.get(type)) {
                 messagesQueue.get(m).clear();
                 messagesQueue.get(m).add(b);
-                    m.notifyMicroService();
+                m.notifyMicroService();
 
             }
 
-        }
-
-        else {
+        } else {
             for (MicroService m : broadcast_subscribers.get(type)) {
                 messagesQueue.get(m).add(b);
-                    m.notifyMicroService();
+                m.notifyMicroService();
             }
         }
     }
-
 
     @Override
     public <T> Future<T> sendEvent(Event<T> e) {
@@ -180,17 +167,14 @@ public class MessageBusImpl implements MessageBus {
                     if (prev_counter == event_subscribers.get(type).getKey().size() && prev_counter != 0) //The counter's value is now illegal, for example it's 5 while there are now 5 MS's, OR now there are no more MS's registered
                         event_subscribers.get(type).getValue().set(prev_counter - 1);
                 }
+            } else if (broadcast_subscribers.containsKey(type) && broadcast_subscribers.get(type).contains(m)) { // meaning this microservice is registered to the broadcast subs of said broadcast.
+                broadcast_subscribers.get(type).remove(m);
             }
 
-            else if (broadcast_subscribers.containsKey(type) && broadcast_subscribers.get(type).contains(m)) { // meaning this microservice is registered to the broadcast subs of said broadcast.
-                 broadcast_subscribers.get(type).remove(m);
-             }
-
-        messagesQueue.remove(m); //Finally, remove the message queue of the microservice.
-         }
+            messagesQueue.remove(m); //Finally, remove the message queue of the microservice.
+        }
 
     }
-
 
     @Override
     public Message awaitMessage(MicroService m) throws InterruptedException {
@@ -206,6 +190,11 @@ public class MessageBusImpl implements MessageBus {
             return messagesQueue.get(m).remove(0);
 
         }
+    }
+
+    private static class MessageBusHolder {
+        private static final MessageBusImpl messageBusInstance = new MessageBusImpl();
+
     }
 
 }

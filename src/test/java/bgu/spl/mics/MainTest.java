@@ -1,6 +1,5 @@
 package bgu.spl.mics;
 
-import bgu.spl.mics.application.broadcasts.PublishConferenceBroadcast;
 import bgu.spl.mics.application.events.TestModelEvent;
 import bgu.spl.mics.application.events.TrainModelEvent;
 import bgu.spl.mics.application.objects.*;
@@ -10,7 +9,6 @@ import bgu.spl.mics.application.services.TimeService;
 import org.junit.Before;
 import org.junit.Test;
 
-
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
@@ -18,8 +16,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 
-
-class ExampleGPU extends MicroService{
+class ExampleGPU extends MicroService {
 
 
     /**
@@ -54,7 +51,7 @@ class ExampleGPU extends MicroService{
             Random random = new Random();
             double randNum = random.nextDouble();
             ModelStatus modelStatus = ModelStatus.Bad;
-            if(randNum >= 0.6) modelStatus = ModelStatus.Good;
+            if (randNum >= 0.6) modelStatus = ModelStatus.Good;
             complete(e, modelStatus);
 
         };
@@ -68,8 +65,8 @@ class ExampleGPU extends MicroService{
 
 public class MainTest {
 
-    final int ticks=1;
-    final int duration=600;
+    final int ticks = 1;
+    final int duration = 600;
     ExampleMicroService exampleMicroService;
     StudentService studentService;
     ConferenceService conferenceService1, conferenceService2;
@@ -79,7 +76,7 @@ public class MainTest {
 
 
     @Before
-    public void beforeTest(){
+    public void beforeTest() {
 
         ArrayList<Model> models = new ArrayList<Model>();
         Model m1 = new Model("test1", ModelType.Images, 10000);
@@ -99,7 +96,7 @@ public class MainTest {
         studentService = new StudentService(student1);
         int confCounter = 1;
         conferenceService1 = new ConferenceService("conf1", conf1, confCounter);
-        confCounter=conf1.getDate();
+        confCounter = conf1.getDate();
         conferenceService2 = new ConferenceService("conf2", conf2, confCounter);
 
 
@@ -115,8 +112,8 @@ public class MainTest {
         fixedPool.execute(exampleGPU);
         fixedPool.execute(conferenceService1);
         fixedPool.execute(conferenceService2);
-        
-        Thread thread = new Thread ( () -> { // Need to have some sort of delay between setup of gpus and student services
+
+        Thread thread = new Thread(() -> { // Need to have some sort of delay between setup of gpus and student services
             try {
                 Thread.sleep(5);
             } catch (InterruptedException e) {
@@ -131,7 +128,6 @@ public class MainTest {
             e.printStackTrace();
         }
         fixedPool.execute(studentService);
-
 
 
         fixedPool.shutdown();

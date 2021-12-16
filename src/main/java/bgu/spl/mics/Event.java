@@ -11,5 +11,6 @@ public interface Event<T> extends Message {
 
 
     Future<T> getFuture();
+
     void setFuture(Future<T> future);
 }

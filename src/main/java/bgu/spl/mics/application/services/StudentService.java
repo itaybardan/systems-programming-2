@@ -4,9 +4,9 @@ import bgu.spl.mics.Callback;
 import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.broadcasts.PublishConferenceBroadcast;
-import bgu.spl.mics.application.events.TrainModelEvent;
-import bgu.spl.mics.application.events.TestModelEvent;
 import bgu.spl.mics.application.events.PublishResultsEvent;
+import bgu.spl.mics.application.events.TestModelEvent;
+import bgu.spl.mics.application.events.TrainModelEvent;
 import bgu.spl.mics.application.objects.Model;
 import bgu.spl.mics.application.objects.ModelStatus;
 import bgu.spl.mics.application.objects.Student;
@@ -59,12 +59,11 @@ public class StudentService extends MicroService {
                 publishResultsEvent.setFuture(sendEvent(publishResultsEvent));
             }
 
-            if(++currentModelIndex < student.getModels().size()){ //Will send TrainModel for the next model, if there is one
+            if (++currentModelIndex < student.getModels().size()) { //Will send TrainModel for the next model, if there is one
                 task = new TrainModelEvent(student.getModels().get(currentModelIndex));
                 Future<TestModelEvent> future = sendEvent(task);
                 task.setFuture(future);
-            }
-            else task = null;
+            } else task = null;
         };
 
         //Setting up one's tasks.
@@ -76,7 +75,7 @@ public class StudentService extends MicroService {
 
         //Sending the first TrainModel
         Model firstModel = student.getModels().get(0);
-        if(firstModel != null) {
+        if (firstModel != null) {
             TrainModelEvent trainModelEvent = new TrainModelEvent(firstModel);
             trainModelEvent.setFuture(sendEvent(trainModelEvent));
             task = trainModelEvent;

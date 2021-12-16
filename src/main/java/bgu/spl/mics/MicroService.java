@@ -28,9 +28,8 @@ public abstract class MicroService implements Runnable {
 
     //Fields
 
-    protected boolean terminated = false;
     protected final String name;
-
+    protected boolean terminated = false;
     protected MessageBusImpl messageBus = MessageBusImpl.getInstance();
 
     protected HashMap<Class<? extends Message>, Callback> messages_callbacks;
@@ -174,7 +173,7 @@ public abstract class MicroService implements Runnable {
     public void run() {
 
         initialize();
-        Callback<TerminateBroadcast> terminateCallback = (TerminateBroadcast b) ->{
+        Callback<TerminateBroadcast> terminateCallback = (TerminateBroadcast b) -> {
             terminate();
         };
         subscribeBroadcast(TerminateBroadcast.class, terminateCallback); //Every microservice will be terminated at the end of the program's duration
@@ -183,11 +182,11 @@ public abstract class MicroService implements Runnable {
             try {
                 if (task != null) {
 
-                        if(task.getFuture().isDone()){
-                             messages_callbacks.get(task.getClass()).call(task);
+                    if (task.getFuture().isDone()) {
+                        messages_callbacks.get(task.getClass()).call(task);
                         //task = null; the callback will decide whether to set it to null or not.
-                        }
-                        if(messageBus.isMessageQueueEmpty(this)) continue;
+                    }
+                    if (messageBus.isMessageQueueEmpty(this)) continue;
 
                 }
                 Message message = messageBus.awaitMessage(this);
@@ -206,7 +205,7 @@ public abstract class MicroService implements Runnable {
         notifyAll();
     }
 
-    public Set<Class<? extends Message>> getMessagesCallbacks(){
+    public Set<Class<? extends Message>> getMessagesCallbacks() {
         return messages_callbacks.keySet();
     }
 

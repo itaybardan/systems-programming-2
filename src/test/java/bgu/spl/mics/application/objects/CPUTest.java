@@ -1,10 +1,9 @@
 package bgu.spl.mics.application.objects;
 
-import static org.junit.Assert.assertTrue;
-
-import bgu.spl.mics.application.objects.CPU;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
 
 public class CPUTest {
 
