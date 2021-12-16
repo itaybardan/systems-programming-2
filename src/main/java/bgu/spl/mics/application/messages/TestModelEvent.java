@@ -6,13 +6,11 @@ import bgu.spl.mics.application.objects.Student;
 
 public class TestModelEvent implements Event<String> {
     private final Model model;
-    private final Student student;
     private Future<String> future;
 
-    public TestModelEvent(Model model, Student student, Future<String> future){
+    public TestModelEvent(Model model){
         this.model = model;
-        this.student = student;
-        this.future = future;
+        future = new Future<>();
     }
 
     @Override
@@ -23,10 +21,6 @@ public class TestModelEvent implements Event<String> {
     @Override
     public void setFuture(Future<String> future) {
         this.future = future;
-    }
-
-    public Student getStudent() {
-        return this.student;
     }
 
     public Model getModel() {
