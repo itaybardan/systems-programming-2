@@ -6,6 +6,8 @@ import bgu.spl.mics.application.messages.broadcasts.PublishConferenceBroadcast;
 import bgu.spl.mics.application.messages.broadcasts.TickBroadcast;
 import bgu.spl.mics.application.messages.events.PublishResultsEvent;
 import bgu.spl.mics.application.objects.ConferenceInformation;
+
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -20,29 +22,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ConferenceService extends MicroService {
 
     private ConferenceInformation conference;
-    private final int startTime;
     private AtomicInteger currentTime;
 
-    public ConferenceService(String name, ConferenceInformation _conference, int _startTime) { //startTime will be calculated in advance in main, by previousConference's conferenceDate
+    public ConferenceService(String name, ConferenceInformation _conference) { //startTime will be calculated in advance in main, by previousConference's conferenceDate
         super(name);
         conference = _conference;
-        startTime = _startTime; // = prevConference.conferenceDate / tickTime || 1 if it's the first conference, startTime <= program duration
         currentTime = new AtomicInteger(1);
     }
 
     @Override
     protected void initialize() {
-
-        synchronized (this){
-            try {
-                Thread.sleep(startTime);
-            } catch (InterruptedException e) {
-                terminate();
-            }
-        }
-
-        messageBus.register(this);
-
 
         //Setting up Callbacks
         Callback<PublishResultsEvent> publishResultsCallback = (PublishResultsEvent e) -> conference.addPublish(e.getModel());
