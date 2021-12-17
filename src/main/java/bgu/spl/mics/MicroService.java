@@ -1,9 +1,5 @@
 package bgu.spl.mics;
-
-
 import bgu.spl.mics.application.messages.broadcasts.TerminateBroadcast;
-import bgu.spl.mics.application.messages.broadcasts.TickBroadcast;
-
 import java.util.HashMap;
 import java.util.Set;
 
@@ -174,9 +170,7 @@ public abstract class MicroService implements Runnable {
     public void run() {
 
         initialize();
-        Callback<TerminateBroadcast> terminateCallback = (TerminateBroadcast b) -> {
-            terminate();
-        };
+        Callback<TerminateBroadcast> terminateCallback = (TerminateBroadcast b) -> terminate();
         subscribeBroadcast(TerminateBroadcast.class, terminateCallback); //Every microservice will be terminated at the end of the program's duration
         Message message;
 
