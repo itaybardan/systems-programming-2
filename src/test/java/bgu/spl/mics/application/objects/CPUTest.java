@@ -11,11 +11,11 @@ public class CPUTest {
 
     @Before
     public void setUp() {
-        this.cpu = new CPU(0, Cluster.getInstance());
+        this.cpu = new CPU(0);
     }
 
     @Test
     public void testNumberOfCores() {
-        assertTrue(this.cpu.getCores() > 0);
+        assertTrue(this.cpu.cores > 0);
     }
 }

@@ -4,12 +4,14 @@ import bgu.spl.mics.Callback;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.broadcasts.PublishConferenceBroadcast;
 import bgu.spl.mics.application.messages.broadcasts.TickBroadcast;
-import bgu.spl.mics.application.messages.events.TrainModelEvent;
-import bgu.spl.mics.application.messages.events.TestModelEvent;
 import bgu.spl.mics.application.messages.events.PublishResultsEvent;
+import bgu.spl.mics.application.messages.events.TestModelEvent;
+import bgu.spl.mics.application.messages.events.TrainModelEvent;
 import bgu.spl.mics.application.objects.Model;
 import bgu.spl.mics.application.objects.ModelStatus;
 import bgu.spl.mics.application.objects.Student;
+
+import java.util.logging.Logger;
 
 
 /**
@@ -22,6 +24,7 @@ import bgu.spl.mics.application.objects.Student;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class StudentService extends MicroService {
+    private static final Logger logger = Logger.getLogger(StudentService.class.getName());
     private final Student student;
     private int currentModelIndex;
 
@@ -34,9 +37,7 @@ public class StudentService extends MicroService {
 
     @Override
     protected void initialize() {
-
-
-
+        logger.info(String.format("%s Student Service has started ", this.name));
 
         //Setting up Callbacks
         Callback<PublishConferenceBroadcast> publishConferenceCallback = (PublishConferenceBroadcast b) -> {
@@ -62,18 +63,17 @@ public class StudentService extends MicroService {
                 publishResultsEvent.setFuture(sendEvent(publishResultsEvent));
             }
 
-            if(++currentModelIndex < student.getModels().size()){ //Will send TrainModel for the next model, if there is one
+            if (++currentModelIndex < student.getModels().size()) { //Will send TrainModel for the next model, if there is one
 
                 model = student.getModels().get(currentModelIndex);
                 TrainModelEvent trainModelEvent = new TrainModelEvent(model);
                 trainModelEvent.setFuture(sendEvent(trainModelEvent));
                 task = trainModelEvent;
 
-            }
-            else task = null;
+            } else task = null;
         };
-        Callback<TickBroadcast> tickBroadcastCallback = (TickBroadcast b) ->{
-            if(task != null && task.getFuture().isDone()){
+        Callback<TickBroadcast> tickBroadcastCallback = (TickBroadcast b) -> {
+            if (task != null && task.getFuture().isDone()) {
                 messages_callbacks.get(task.getClass()).call(task);
             }
         };
@@ -89,7 +89,7 @@ public class StudentService extends MicroService {
 
         //Sending the first TrainModel
         Model firstModel = student.getModels().get(0);
-        if(firstModel != null) {
+        if (firstModel != null) {
             TrainModelEvent trainModelEvent = new TrainModelEvent(firstModel);
             trainModelEvent.setFuture(sendEvent(trainModelEvent));
             task = trainModelEvent;

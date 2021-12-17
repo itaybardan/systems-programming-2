@@ -8,9 +8,10 @@ import bgu.spl.mics.application.messages.events.PublishResultsEvent;
 import bgu.spl.mics.application.messages.events.TestModelEvent;
 import bgu.spl.mics.application.messages.events.TrainModelEvent;
 
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.LinkedBlockingQueue;
 
 
 /**
@@ -30,15 +31,15 @@ public class MessageBusImpl implements MessageBus {
 
     private final Map<Class<? extends Broadcast>, CopyOnWriteArrayList<MicroService>> broadcast_subscribers;
 
-    private final ConcurrentHashMap<Message,Future> message_future;
+    private final ConcurrentHashMap<Message, Future> message_future;
 
     private final ConcurrentHashMap<MicroService, LinkedBlockingQueue<Message>> messagesQueue;
-    private final Object lock = new Object();
 
     private static class MessageBusHolder {
         private static final MessageBusImpl messageBusInstance = new MessageBusImpl();
 
     }
+
     private MessageBusImpl() {
         event_subscribers = new ConcurrentHashMap<>();
         broadcast_subscribers = new ConcurrentHashMap<>();
@@ -48,12 +49,14 @@ public class MessageBusImpl implements MessageBus {
         InitEvents();
 
     }
-    public void InitBroadcasts(){
+
+    public void InitBroadcasts() {
         broadcast_subscribers.put(TerminateBroadcast.class, new CopyOnWriteArrayList<>());
         broadcast_subscribers.put(TickBroadcast.class, new CopyOnWriteArrayList<>());
         broadcast_subscribers.put(PublishConferenceBroadcast.class, new CopyOnWriteArrayList<>());
     }
-    public void InitEvents(){
+
+    public void InitEvents() {
         event_subscribers.put(TrainModelEvent.class, new LinkedBlockingQueue<>());
         event_subscribers.put(TestModelEvent.class, new LinkedBlockingQueue<>());
         event_subscribers.put(PublishResultsEvent.class, new LinkedBlockingQueue<>());
@@ -81,9 +84,7 @@ public class MessageBusImpl implements MessageBus {
     }
 
 
-
-
-    public Boolean isMessageQueueEmpty(MicroService m){ //Will be used by micro services which have other tasks they need to work on, not via the buss
+    public Boolean isMessageQueueEmpty(MicroService m) { //Will be used by micro services which have other tasks they need to work on, not via the buss
 
         if (!messagesQueue.containsKey(m)) return true;
         return messagesQueue.get(m).size() == 0;
@@ -93,7 +94,7 @@ public class MessageBusImpl implements MessageBus {
     //Methods
     @Override
     public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-        if(m == null || type == null) return;
+        if (m == null || type == null) return;
         if (event_subscribers.containsKey(type)) { //The event is registered in the map
             event_subscribers.get(type).add(m);
         }
@@ -102,7 +103,7 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-        if(m == null || type == null) return;
+        if (m == null || type == null) return;
         if (broadcast_subscribers.containsKey(type)) { //The event is registered in the map
             broadcast_subscribers.get(type).add(m);
         }
@@ -118,17 +119,15 @@ public class MessageBusImpl implements MessageBus {
     public void sendBroadcast(Broadcast b) {
         Class<? extends Broadcast> type = b.getClass();
 
-        if(!broadcast_subscribers.containsKey(type) || broadcast_subscribers.get(type).size() ==0) return;
-        if(type == TerminateBroadcast.class){
+        if (!broadcast_subscribers.containsKey(type) || broadcast_subscribers.get(type).size() == 0) return;
+        if (type == TerminateBroadcast.class) {
             for (MicroService m : broadcast_subscribers.get(type)) {
                 messagesQueue.get(m).clear();
                 messagesQueue.get(m).add(b);
                 m.notifyMicroService();
             }
 
-        }
-
-        else {
+        } else {
             for (MicroService m : broadcast_subscribers.get(type)) {
                 messagesQueue.get(m).add(b);
                 m.notifyMicroService();
@@ -149,7 +148,7 @@ public class MessageBusImpl implements MessageBus {
 
         synchronized (event_subscribers.get(type)) {
             MicroService eventHandler = event_subscribers.get(type).poll();
-            if(eventHandler ==null) return null;
+            if (eventHandler == null) return null;
             Future<T> future = new Future<>();
             message_future.put(e, future);
             messagesQueue.get(eventHandler).add(e);
@@ -203,12 +202,10 @@ public class MessageBusImpl implements MessageBus {
                 m.wait(); // will be notified when it gets a message. no need to be in a while loop since only this method can remove from m's queue
             }
 
-                return messagesQueue.get(m).poll();
+            return messagesQueue.get(m).poll();
 
         }
     }
-
-
 
 
     public boolean isEventProcessed(Event event) { //Only for test

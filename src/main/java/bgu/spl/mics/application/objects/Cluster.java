@@ -2,8 +2,9 @@ package bgu.spl.mics.application.objects;
 
 
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Passive object representing the cluster.
@@ -13,14 +14,32 @@ import java.util.Queue;
  * Add fields and methods to this class as you see fit (including public methods and constructors).
  */
 public class Cluster {
-    public final Queue<DataBatch> unProcessedDataBatches;
-    public final Queue<DataBatch> processedDataBatches;
-    private ArrayList<GPU> gpus;
-    private ArrayList<CPU> cpus;
+    public static class Statistics {
+        public CopyOnWriteArrayList<String> trainedModelsNames;
+        public AtomicInteger processedDataBatches;
+        public AtomicInteger cpuTimeUsed;
+        public AtomicInteger gpuTimeUsed;
+
+        public Statistics(CopyOnWriteArrayList<String> trainedModelsNames, AtomicInteger processedDataBatches, AtomicInteger cpuTimeUsed, AtomicInteger gpuTimeUsed) {
+            this.trainedModelsNames = trainedModelsNames;
+            this.processedDataBatches = processedDataBatches;
+            this.cpuTimeUsed = cpuTimeUsed;
+            this.gpuTimeUsed = gpuTimeUsed;
+        }
+    }
+
+    public Statistics statistics;
+    public ConcurrentHashMap<DataBatch, GPU> dataBatchToGpu;
+    public CopyOnWriteArrayList<DataBatch> unprocessedDataBatches;
+    public ConcurrentHashMap<GPU, CopyOnWriteArrayList<DataBatch>> gpuToProcessedDataBatches;
+    public final Object unprocessedDataBatchesLock = new Object();
 
     public Cluster() {
-        this.unProcessedDataBatches = new LinkedList<>();
-        this.processedDataBatches = new LinkedList<>();
+        this.unprocessedDataBatches = new CopyOnWriteArrayList<>();
+        this.dataBatchToGpu = new ConcurrentHashMap<>();
+        this.gpuToProcessedDataBatches = new ConcurrentHashMap<>();
+        this.statistics = new Statistics(new CopyOnWriteArrayList<>(), new AtomicInteger(0),
+                new AtomicInteger(0), new AtomicInteger(0));
     }
 
     /**
@@ -33,6 +52,4 @@ public class Cluster {
     private static class ClusterInstanceHolder {
         private static final Cluster clusterInstance = new Cluster();
     }
-
-
 }
