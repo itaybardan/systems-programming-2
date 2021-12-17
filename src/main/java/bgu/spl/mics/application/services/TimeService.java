@@ -34,7 +34,7 @@ public class TimeService extends MicroService {
     @Override
     protected void initialize() {
         timer = new Timer();
-        currentTime = new AtomicInteger(1);
+        currentTime = new AtomicInteger(0);
 
         //starting count time
 
