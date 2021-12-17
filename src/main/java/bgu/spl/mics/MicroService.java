@@ -1,7 +1,10 @@
 package bgu.spl.mics;
 import bgu.spl.mics.application.messages.broadcasts.TerminateBroadcast;
+import bgu.spl.mics.application.services.GPUService;
+
 import java.util.HashMap;
 import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * The MicroService is an abstract class that any micro-service in the system
@@ -24,7 +27,7 @@ import java.util.Set;
 public abstract class MicroService implements Runnable {
 
     //Fields
-
+    private static final Logger logger = Logger.getLogger(MicroService.class.getName());
     protected final String name;
     protected boolean terminated = false;
     protected MessageBusImpl messageBus = MessageBusImpl.getInstance();
@@ -184,7 +187,7 @@ public abstract class MicroService implements Runnable {
                 System.out.println("thread:" + Thread.currentThread().getId() + " interrupted thread:" + name);
             }
         }
-
+        logger.info(String.format("%s is terminating", this.name));
         messageBus.unregister(this);
     }
 
