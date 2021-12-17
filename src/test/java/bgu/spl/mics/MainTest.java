@@ -1,6 +1,5 @@
 package bgu.spl.mics;
 
-import bgu.spl.mics.application.messages.broadcasts.PublishConferenceBroadcast;
 import bgu.spl.mics.application.messages.events.TestModelEvent;
 import bgu.spl.mics.application.messages.events.TrainModelEvent;
 import bgu.spl.mics.application.objects.*;
@@ -94,7 +93,7 @@ public class MainTest {
 
         Student student1 = new Student("stud1", "dep", Student.Degree.MSc, models);
         ConferenceInformation conf1 = new ConferenceInformation("conf1", 250);
-        ConferenceInformation conf2 = new ConferenceInformation("conf1", 450);
+        ConferenceInformation conf2 = new ConferenceInformation("conf2", 450);
 
         exampleGPU1 = new ExampleGPU("gpu1");
         exampleGPU2 = new ExampleGPU("gpu2");
@@ -102,10 +101,10 @@ public class MainTest {
 
         studentService1 = new StudentService(student1);
         studentService2 = new StudentService(student1);
-        int confCounter = 1;
-        conferenceService1 = new ConferenceService("conf1", conf1, confCounter);
-        confCounter=conf1.getDate();
-        conferenceService2 = new ConferenceService("conf2", conf2, confCounter);
+
+        conferenceService1 = new ConferenceService("conf1", conf1);
+
+        conferenceService2 = new ConferenceService("conf2", conf2);
 
 
         messageBus = MessageBusImpl.getInstance();
@@ -114,7 +113,7 @@ public class MainTest {
     @Test
     public void runTest() {
 
-        ExecutorService fixedPool = Executors.newFixedThreadPool(7);
+        ExecutorService fixedPool = Executors.newFixedThreadPool(8);
         timeService = new TimeService("time",ticks, duration);
         fixedPool.execute(timeService);
         fixedPool.execute(exampleGPU1);
