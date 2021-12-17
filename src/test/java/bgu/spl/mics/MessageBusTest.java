@@ -67,11 +67,11 @@ public class MessageBusTest { //each test needs to be done separately as Message
     @Test
     public void subscribeEventTest() {
 
-        assertEquals(true, messageBus.isEventSubsEmpty(TrainModelEvent.class));
+        assertTrue(messageBus.isEventSubsEmpty(TrainModelEvent.class));
         messageBus.register(microService);
 
         messageBus.subscribeEvent(event.getClass(), microService);
-        assertEquals(false, messageBus.isEventSubsEmpty(event.getClass()));
+        assertFalse(messageBus.isEventSubsEmpty(event.getClass()));
 
     }
 

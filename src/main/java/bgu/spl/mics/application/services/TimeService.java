@@ -37,7 +37,6 @@ public class TimeService extends MicroService {
         currentTime = new AtomicInteger(0);
 
         //starting count time
-
         timer.schedule(timerTask(() -> {
                     if (currentTime.get() < programDuration) {
                         sendBroadcast(new TickBroadcast(currentTime.get()));
