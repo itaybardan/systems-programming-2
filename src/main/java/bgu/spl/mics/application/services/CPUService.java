@@ -30,7 +30,6 @@ public class CPUService extends MicroService {
                 if (cpu.ticks - cpu.startProcessTick == Data.getTickTime(cpu.dataBatch.type) * (32 / this.cpu.cores)) {
                     cpu.sendReadyDataBatch();
                     cpu.finishProcessing();
-                    cpu.getNewDataBatch();
                 }
             } else {
                 boolean succeed = cpu.getNewDataBatch();

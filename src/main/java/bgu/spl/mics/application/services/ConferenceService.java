@@ -46,8 +46,6 @@ public class ConferenceService extends MicroService {
         //Subscribing to necessary events and broadcasts
         subscribeEvent(PublishResultsEvent.class, publishResultsCallback);
         subscribeBroadcast(TickBroadcast.class, tickCallback);
-
-
     }
 
 }
