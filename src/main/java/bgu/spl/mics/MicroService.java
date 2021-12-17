@@ -173,14 +173,11 @@ public abstract class MicroService implements Runnable {
     @Override
     public void run() {
 
+        initialize();
         Callback<TerminateBroadcast> terminateCallback = (TerminateBroadcast b) -> {
             terminate();
         };
         subscribeBroadcast(TerminateBroadcast.class, terminateCallback); //Every microservice will be terminated at the end of the program's duration
-
-
-
-        initialize();
         Message message;
 
         while (!terminated) {

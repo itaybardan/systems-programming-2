@@ -1,7 +1,12 @@
 package bgu.spl.mics;
 
 
+import bgu.spl.mics.application.messages.broadcasts.PublishConferenceBroadcast;
 import bgu.spl.mics.application.messages.broadcasts.TerminateBroadcast;
+import bgu.spl.mics.application.messages.broadcasts.TickBroadcast;
+import bgu.spl.mics.application.messages.events.PublishResultsEvent;
+import bgu.spl.mics.application.messages.events.TestModelEvent;
+import bgu.spl.mics.application.messages.events.TrainModelEvent;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -39,6 +44,19 @@ public class MessageBusImpl implements MessageBus {
         broadcast_subscribers = new ConcurrentHashMap<>();
         message_future = new ConcurrentHashMap<>();
         messagesQueue = new ConcurrentHashMap<>();
+        InitBroadcasts();
+        InitEvents();
+
+    }
+    public void InitBroadcasts(){
+        broadcast_subscribers.put(TerminateBroadcast.class, new CopyOnWriteArrayList<>());
+        broadcast_subscribers.put(TickBroadcast.class, new CopyOnWriteArrayList<>());
+        broadcast_subscribers.put(PublishConferenceBroadcast.class, new CopyOnWriteArrayList<>());
+    }
+    public void InitEvents(){
+        event_subscribers.put(TrainModelEvent.class, new LinkedBlockingQueue<>());
+        event_subscribers.put(TestModelEvent.class, new LinkedBlockingQueue<>());
+        event_subscribers.put(PublishResultsEvent.class, new LinkedBlockingQueue<>());
     }
 
 
@@ -76,25 +94,18 @@ public class MessageBusImpl implements MessageBus {
     @Override
     public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
         if(m == null || type == null) return;
-        if (!event_subscribers.containsKey(type)) { //The event is not registered yet in the map.
-            LinkedBlockingQueue<MicroService> queue = new LinkedBlockingQueue<>();
-            event_subscribers.put(type, queue);
-        }
-
+        if (event_subscribers.containsKey(type)) { //The event is registered in the map
             event_subscribers.get(type).add(m);
-
+        }
     }
 
 
     @Override
     public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-        CopyOnWriteArrayList<MicroService> temp_array;
-        if (!broadcast_subscribers.containsKey(type)) { //The broadcast is not registered yet in the map.
-            temp_array = new CopyOnWriteArrayList<>();
-            broadcast_subscribers.put(type, temp_array);
-        }
+        if(m == null || type == null) return;
+        if (broadcast_subscribers.containsKey(type)) { //The event is registered in the map
             broadcast_subscribers.get(type).add(m);
-
+        }
     }
 
     @Override
@@ -112,7 +123,6 @@ public class MessageBusImpl implements MessageBus {
             for (MicroService m : broadcast_subscribers.get(type)) {
                 messagesQueue.get(m).clear();
                 messagesQueue.get(m).add(b);
-                System.out.println("terminate " + m.name);
                 m.notifyMicroService();
             }
 

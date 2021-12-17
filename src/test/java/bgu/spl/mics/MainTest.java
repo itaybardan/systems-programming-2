@@ -72,10 +72,10 @@ class ExampleGPU extends MicroService{
 public class MainTest {
 
     final int ticks=10;
-    final int duration=600;
-    StudentService studentService;
+    final int duration=800;
+    StudentService studentService1, studentService2;
     ConferenceService conferenceService1, conferenceService2;
-    ExampleGPU exampleGPU1, exampleGPU2;
+    ExampleGPU exampleGPU1, exampleGPU2, exampleGPU3;
     TimeService timeService;
     MessageBusImpl messageBus;
 
@@ -98,7 +98,10 @@ public class MainTest {
 
         exampleGPU1 = new ExampleGPU("gpu1");
         exampleGPU2 = new ExampleGPU("gpu2");
-        studentService = new StudentService(student1);
+        exampleGPU3 = new ExampleGPU("gpu3");
+
+        studentService1 = new StudentService(student1);
+        studentService2 = new StudentService(student1);
         int confCounter = 1;
         conferenceService1 = new ConferenceService("conf1", conf1, confCounter);
         confCounter=conf1.getDate();
@@ -111,11 +114,12 @@ public class MainTest {
     @Test
     public void runTest() {
 
-        ExecutorService fixedPool = Executors.newFixedThreadPool(6);
+        ExecutorService fixedPool = Executors.newFixedThreadPool(7);
         timeService = new TimeService("time",ticks, duration);
         fixedPool.execute(timeService);
         fixedPool.execute(exampleGPU1);
         fixedPool.execute(exampleGPU2);
+        fixedPool.execute(exampleGPU3);
         fixedPool.execute(conferenceService1);
         fixedPool.execute(conferenceService2);
 
@@ -133,7 +137,8 @@ public class MainTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        fixedPool.execute(studentService);
+        fixedPool.execute(studentService1);
+        fixedPool.execute(studentService2);
 
 
 
