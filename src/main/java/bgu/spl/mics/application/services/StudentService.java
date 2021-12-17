@@ -46,7 +46,7 @@ public class StudentService extends MicroService {
         };
 
         Callback<TrainModelEvent> trainModelCallback = (TrainModelEvent e) -> {
-
+            System.out.println(e.model.getName() + " has finished training");
             Model model = e.getModel();
             TestModelEvent testModelEvent = new TestModelEvent(model, student.getStatus());
             testModelEvent.setFuture(sendEvent(testModelEvent)); //sending test model .
@@ -73,7 +73,8 @@ public class StudentService extends MicroService {
             } else task = null;
         };
         Callback<TickBroadcast> tickBroadcastCallback = (TickBroadcast b) -> {
-            if (task != null && task.getFuture().isDone()) {
+
+            if (task != null && task.getFuture() != null && task.getFuture().isDone()) {
                 messages_callbacks.get(task.getClass()).call(task);
             }
         };

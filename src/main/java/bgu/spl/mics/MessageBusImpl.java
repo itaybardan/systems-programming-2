@@ -73,9 +73,14 @@ public class MessageBusImpl implements MessageBus {
         if (!event_subscribers.containsKey(type)) return true;
         return event_subscribers.get(type).isEmpty();
     }
+    public void printEventSubs(Class<? extends Event> type){
+        for(MicroService m : event_subscribers.get(type)){
+            System.out.println(m.name);
+        }
+    }
 
     public boolean isBroadcastSubsEmpty(Class<? extends Broadcast> type) {
-        if (broadcast_subscribers.containsKey(type)) return true;
+        if (!broadcast_subscribers.containsKey(type)) return true;
         return broadcast_subscribers.get(type).isEmpty();
     }
 
@@ -103,6 +108,7 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
+
         if (m == null || type == null) return;
         if (broadcast_subscribers.containsKey(type)) { //The event is registered in the map
             broadcast_subscribers.get(type).add(m);
@@ -177,11 +183,11 @@ public class MessageBusImpl implements MessageBus {
         for (Class<? extends Message> type : m.getMessagesCallbacks()) {
             if (type == null) continue;
 
-            if (event_subscribers.containsKey(type)) { // meaning this micro service is registered to the event subscribers of said event.
+            else if (event_subscribers.containsKey(type)) { // meaning this micro service is registered to the event subscribers of said event.
                 event_subscribers.get(type).remove(m);
             }
 
-            if (broadcast_subscribers.containsKey(type)) { // meaning this microservice is registered to the broadcast subs of said broadcast.
+            else if (broadcast_subscribers.containsKey(type)) { // meaning this microservice is registered to the broadcast subs of said broadcast.
                 broadcast_subscribers.get(type).remove(m);
             }
 
@@ -196,10 +202,10 @@ public class MessageBusImpl implements MessageBus {
 
         if (!isRegistered(m)) throw new IllegalStateException(); // this microservice does not exist
 
-        synchronized (m) {
+        synchronized (m.lock) {
             while (messagesQueue.get(m).isEmpty()) {
 
-                m.wait(); // will be notified when it gets a message. no need to be in a while loop since only this method can remove from m's queue
+                m.lock.wait(); // will be notified when it gets a message. no need to be in a while loop since only this method can remove from m's queue
             }
 
             return messagesQueue.get(m).poll();
@@ -208,19 +214,14 @@ public class MessageBusImpl implements MessageBus {
     }
 
 
-    public boolean isEventProcessed(Event event) { //Only for test
-        for (MicroService m : messagesQueue.keySet()) {
-            if (messagesQueue.get(m).contains(event)) return true;
-        }
+    public boolean isEventProcessed(Event event, MicroService m) { //Only for test
+            if (messagesQueue.containsKey(m) && messagesQueue.get(m).contains(event)) return true;
         return false;
     }
 
 
-    public boolean isBroadcastProcessed(Broadcast broadcast) { //Only for test
-        for (MicroService m : messagesQueue.keySet()) {
-            if (messagesQueue.get(m).contains(broadcast)) return true;
-        }
-
+    public boolean isBroadcastProcessed(Broadcast broadcast, MicroService m) { //Only for test
+            if (messagesQueue.containsKey(m) && messagesQueue.get(m).contains(broadcast)) return true;
         return false;
     }
 

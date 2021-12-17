@@ -12,12 +12,17 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * This is the Main class of Compute Resources Management System application. You should parse the input file,
  * create the different instances of the objects, and run the system.
  * In the end, you should output a text file.
  */
+
+
+
 public class CRMSRunner {
 
     public static void main(String[] args) {
@@ -25,6 +30,7 @@ public class CRMSRunner {
         ImmutablePair<ArrayList<MicroService>, TimeService> microServicesPair = createMicroServices(inputInfo);
         initMicroServices(microServicesPair.getLeft(), microServicesPair.getRight());
     }
+
 
     private static ImmutablePair<ArrayList<MicroService>, TimeService> createMicroServices(InputInfo inputInfo) {
         ArrayList<MicroService> microServices = new ArrayList<>();
@@ -52,35 +58,13 @@ public class CRMSRunner {
     }
 
     private static void initMicroServices(ArrayList<? extends MicroService> microServices, TimeService ts) {
-        // create threads out of every ms
-        ArrayList<Thread> threads = new ArrayList<>();
-        for (MicroService ms : microServices) {
-            threads.add(new Thread(ms));
+        ExecutorService fixedPool = Executors.newFixedThreadPool(microServices.size()+1);
+        fixedPool.execute(ts);
+        for (MicroService m : microServices){
+            fixedPool.execute(m);
         }
+        fixedPool.shutdown();
 
-        // start the threads
-        Thread timeServiceThread = new Thread(ts);
-        for (Thread thread : threads) {
-            thread.start();
-        }
-        timeServiceThread.start();
-
-
-        // wait for time service to finish
-        try {
-            timeServiceThread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        // wait for the ms threads to finish
-        for (Thread thread : threads) {
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     private static InputInfo parseJsonInputFile() {
@@ -110,6 +94,8 @@ public class CRMSRunner {
         }
 
         ArrayList<Student> students = new ArrayList<>();
+
+
         for (JsonElement studentInfo : rootObject.get("Students").getAsJsonArray()) {
             JsonObject studentInfoObject = studentInfo.getAsJsonObject();
             ArrayList<Model> models = new ArrayList<>();
@@ -122,6 +108,7 @@ public class CRMSRunner {
                     studentInfoObject.get("status").getAsString(), models));
 
         }
+
 
         return new CRMSRunner.InputInfo(students, conferences, duration, ticks, gpus, cpus);
     }

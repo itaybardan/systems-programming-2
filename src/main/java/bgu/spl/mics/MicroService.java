@@ -31,6 +31,7 @@ public abstract class MicroService implements Runnable {
     protected final String name;
     protected boolean terminated = false;
     protected MessageBusImpl messageBus = MessageBusImpl.getInstance();
+    public final Object lock = new Object();
 
     protected HashMap<Class<? extends Message>, Callback> messages_callbacks;
 
@@ -182,9 +183,10 @@ public abstract class MicroService implements Runnable {
             try {
                 message = messageBus.awaitMessage(this);
                 messages_callbacks.get(message.getClass()).call(message);
+           //     if(!name.equals("time-service")) System.out.println(name);
 
             } catch (InterruptedException exp) {
-                System.out.println("thread:" + Thread.currentThread().getId() + " interrupted thread:" + name);
+
             }
         }
         logger.info(String.format("%s is terminating", this.name));
@@ -192,8 +194,8 @@ public abstract class MicroService implements Runnable {
     }
 
 
-    public synchronized void notifyMicroService() { //Used by bus when sending events/broadcasts to this micro service.
-        notifyAll();
+    public void notifyMicroService() { //Used by bus when sending events/broadcasts to this micro service.
+        synchronized (lock) {lock.notifyAll();}
     }
 
     public Set<Class<? extends Message>> getMessagesCallbacks() {

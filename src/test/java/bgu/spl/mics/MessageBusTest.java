@@ -2,8 +2,15 @@ package bgu.spl.mics;
 
 
 
+import bgu.spl.mics.application.messages.broadcasts.TerminateBroadcast;
 import bgu.spl.mics.application.messages.broadcasts.TickBroadcast;
+import bgu.spl.mics.application.messages.events.PublishResultsEvent;
+import bgu.spl.mics.application.messages.events.TestModelEvent;
 import bgu.spl.mics.application.messages.events.TrainModelEvent;
+import bgu.spl.mics.application.objects.Model;
+import bgu.spl.mics.application.objects.ModelStatus;
+import bgu.spl.mics.application.objects.ModelType;
+import bgu.spl.mics.application.objects.Student;
 import bgu.spl.mics.example.messages.ExampleBroadcast;
 import bgu.spl.mics.example.messages.ExampleEvent;
 
@@ -23,12 +30,14 @@ class ExampleMicroService extends  MicroService {
      */
 
 
+
     public ExampleMicroService(String name) {
         super(name);
 
         messages_callbacks.put(ExampleEvent.class, (Object s) -> System.out.println(s));
         messages_callbacks.put(ExampleBroadcast.class, (Object s) -> System.out.println(s));
         messages_callbacks.put(TickBroadcast.class, (Object s) -> System.out.println("time tick"));
+        messages_callbacks.put(PublishResultsEvent.class, (Object s) -> System.out.println(s));
     }
 
     @Override
@@ -41,47 +50,44 @@ class ExampleMicroService extends  MicroService {
         }
     }
 
-    @Override
-    public synchronized void notifyMicroService() { //Used by bus when sending events/broadcasts to this micro service.
-
-        notifyAll();
-    }
 }
 
 public class MessageBusTest { //each test needs to be done separately as MessageBusImpl is a singleton
 
 
     MessageBusImpl messageBus;
-    ExampleEvent event;
-    ExampleBroadcast broadcast;
+    Model testModel;
+    TrainModelEvent event1;
+
     ExampleMicroService microService;
 
     @Before
     public void setUp(){
         messageBus = MessageBusImpl.getInstance();
-        event = new ExampleEvent("test_event");
-        broadcast = new ExampleBroadcast("test_broadcast");
+        testModel = new Model("test", ModelType.images, 10);
+        event1 = new TrainModelEvent(testModel);
         microService = new ExampleMicroService("test_micro_service");
     }
 
     @Test
     public void subscribeEventTest() {
 
-        assertTrue(messageBus.isEventSubsEmpty(TrainModelEvent.class));
+        messageBus.printEventSubs(PublishResultsEvent.class);
+        assertTrue(messageBus.isEventSubsEmpty(PublishResultsEvent.class));
         messageBus.register(microService);
-
-        messageBus.subscribeEvent(event.getClass(), microService);
-        assertFalse(messageBus.isEventSubsEmpty(event.getClass()));
+        messageBus.subscribeEvent(PublishResultsEvent.class, microService);
+        assertFalse(messageBus.isEventSubsEmpty(PublishResultsEvent.class));
+        messageBus.unregister(microService);
 
     }
 
     @Test
     public void subscribeBroadcastTest() {
 
-        assertEquals(true, messageBus.isBroadcastSubsEmpty(broadcast.getClass()));
+        assertEquals(true, messageBus.isBroadcastSubsEmpty(TerminateBroadcast.class));
         messageBus.register(microService);
-        messageBus.subscribeBroadcast(broadcast.getClass(), microService);
-        assertEquals(false, messageBus.isBroadcastSubsEmpty(broadcast.getClass()));
+        messageBus.subscribeBroadcast(TerminateBroadcast.class, microService);
+        assertEquals(false, messageBus.isBroadcastSubsEmpty(TerminateBroadcast.class));
 
         messageBus.unregister(microService);
 
@@ -89,13 +95,22 @@ public class MessageBusTest { //each test needs to be done separately as Message
 
     @Test
     public void completeTest() {
-        ExampleEvent event = new ExampleEvent("zazzi bazazzi");
-        messageBus.register(microService);
-        messageBus.subscribeEvent(event.getClass(), microService);
 
-        event.setFuture(messageBus.sendEvent(event));
-        messageBus.complete(event, "mazazzi");
-        assertTrue(event.getFuture().isDone());
+        messageBus.register(microService);
+        messageBus.subscribeEvent(TrainModelEvent.class, microService);
+
+
+        event1.setFuture(messageBus.sendEvent(event1));
+        Thread thread = new Thread( () -> messageBus.complete(event1, testModel));
+        thread.start();
+        try {
+            thread.join();
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        assertTrue(event1.getFuture().isDone());
 
         messageBus.unregister(microService);
 
@@ -104,44 +119,31 @@ public class MessageBusTest { //each test needs to be done separately as Message
     @Test
     public void sendBroadcastTest() {
 
-        assertFalse(messageBus.isBroadcastProcessed(broadcast));
+        TickBroadcast tickBroadcast = new TickBroadcast(1);
 
-        messageBus.register(microService);
-        messageBus.subscribeBroadcast(ExampleBroadcast.class, microService);
+        assertFalse(messageBus.isBroadcastProcessed(tickBroadcast, microService));
 
-        AtomicBoolean wasNotifiedByBroadcast = new AtomicBoolean(false);
+        ExampleMicroService microService1 = new ExampleMicroService("aaa");
+        messageBus.subscribeBroadcast(TickBroadcast.class, microService1);
+        messageBus.sendBroadcast(tickBroadcast);
 
-        Thread thread = new Thread( () -> {
-            microService.initialize();
-            wasNotifiedByBroadcast.set(true);
-        });
-        thread.start();
-
-        assertFalse(thread.isInterrupted());
-        Thread thread1 = new Thread( () -> messageBus.sendBroadcast(broadcast));
-        thread1.start();
-
-
-        try{
-            thread.join();
-        }catch (Exception e){}
-
-        assertTrue(wasNotifiedByBroadcast.get());
-
-        messageBus.unregister(microService);
+        assertTrue(messageBus.isBroadcastProcessed(tickBroadcast, microService1));
+        messageBus.unregister(microService1);
 
     }
 
     @Test
     public void sendEventTest() {
-        assertFalse(messageBus.isEventProcessed(event));
 
-        messageBus.register(microService);
-        messageBus.subscribeEvent(ExampleEvent.class, microService);
-        messageBus.sendEvent(event);
+        PublishResultsEvent publishResultsEvent = new PublishResultsEvent(testModel);
+        assertFalse(messageBus.isEventProcessed(publishResultsEvent, microService));
 
-        assertTrue(messageBus.isEventProcessed(event));
-        messageBus.unregister(microService);
+        ExampleMicroService microService2 = new ExampleMicroService("bbb");
+        messageBus.subscribeEvent(PublishResultsEvent.class, microService2);
+        messageBus.sendEvent(publishResultsEvent);
+
+        assertTrue(messageBus.isEventProcessed(publishResultsEvent, microService2));
+        messageBus.unregister(microService2);
 
     }
 
@@ -185,12 +187,15 @@ public class MessageBusTest { //each test needs to be done separately as Message
         ExampleMicroService microService1 = new ExampleMicroService("not_exists");
         messageBus.unregister(microService1);
         assertThrows(IllegalStateException.class, () -> messageBus.awaitMessage(microService1));
-        messageBus.register(microService1);
+
+        ExampleMicroService microService2 = new ExampleMicroService("exists");
+        messageBus.subscribeEvent(TestModelEvent.class, microService2); //This part is still on loop but should work
+        messageBus.register(microService2);
 
 
         Thread thread = new Thread(() -> {
             try {
-                messageBus.awaitMessage(microService1);
+                messageBus.awaitMessage(microService2);
             } catch (Exception e) {
 //                assertEquals(InterruptedException.class, e.getClass());
             }
@@ -198,11 +203,16 @@ public class MessageBusTest { //each test needs to be done separately as Message
         thread.start(); //No events, the thread will be on wait()
 
 
-        messageBus.subscribeEvent(ExampleEvent.class, microService1); //This part is still on loop but should work
-        messageBus.sendEvent(event);
 
+        TestModelEvent testModelEvent = new TestModelEvent(testModel, Student.Degree.MSc);
+        Thread thread1 = new Thread( () ->{
+            messageBus.sendEvent(testModelEvent);
+});
+
+        thread1.start();
         try {
             thread.join();
+            thread1.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

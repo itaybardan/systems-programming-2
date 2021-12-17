@@ -18,9 +18,9 @@ public interface MessageBus {
 
     boolean isRegistered(MicroService m);
 
-    boolean isEventProcessed(Event event); //is the event in the message queue of a microservice
+    boolean isEventProcessed(Event event, MicroService m); //is the event in the message queue of a microservice
 
-    boolean isBroadcastProcessed(Broadcast broadcast);
+    boolean isBroadcastProcessed(Broadcast broadcast, MicroService m);
 
     /**
      * Subscribes {@code m} to receive {@link Event}s of type {@code type}.
