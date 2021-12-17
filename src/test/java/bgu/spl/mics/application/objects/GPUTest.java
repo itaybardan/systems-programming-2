@@ -16,7 +16,7 @@ public class GPUTest {
 
     @Test
     public void testSendDataBatchToCluster() {
-        this.gpu.sendDataBatchToCluster(new DataBatch(0));
+        this.gpu.sendDataBatchToCluster(new DataBatch(0, Data.DataType.images));
         assertEquals(0, this.gpu.getAvailableProcessedDataSpace());
     }
 

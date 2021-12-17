@@ -1,12 +1,9 @@
 package bgu.spl.mics;
 
-
 import bgu.spl.mics.application.messages.broadcasts.TerminateBroadcast;
-import bgu.spl.mics.application.services.TimeService;
 
 import java.util.HashMap;
 import java.util.Set;
-import java.util.logging.Logger;
 
 /**
  * The MicroService is an abstract class that any micro-service in the system
@@ -27,7 +24,9 @@ import java.util.logging.Logger;
  * <p>
  */
 public abstract class MicroService implements Runnable {
-    private static final Logger logger = Logger.getLogger(MicroService.class.getName());
+
+    //Fields
+
     protected final String name;
     protected boolean terminated = false;
     protected MessageBusImpl messageBus = MessageBusImpl.getInstance();
@@ -39,7 +38,7 @@ public abstract class MicroService implements Runnable {
 
 
     /**
-     * @param name the microservice name (used mainly for debugging purposes -
+     * @param name the micro-service name (used mainly for debugging purposes -
      *             does not have to be unique)
      */
     public MicroService(String name) {
@@ -67,7 +66,7 @@ public abstract class MicroService implements Runnable {
      * @param type     The {@link Class} representing the type of event to
      *                 subscribe to.
      * @param callback The callback that should be called when messages of type
-     *                 {@code type} are taken from this microservice message
+     *                 {@code type} are taken from this micro-service message
      *                 queue.
      */
     protected final <T, E extends Event<T>> void subscribeEvent(Class<E> type, Callback<E> callback) {
@@ -93,7 +92,7 @@ public abstract class MicroService implements Runnable {
      * @param type     The {@link Class} representing the type of broadcast
      *                 message to subscribe to.
      * @param callback The callback that should be called when messages of type
-     *                 {@code type} are taken from this microservice message
+     *                 {@code type} are taken from this micro-service message
      *                 queue.
      */
     protected final <B extends Broadcast> void subscribeBroadcast(Class<B> type, Callback<B> callback) {
@@ -112,7 +111,7 @@ public abstract class MicroService implements Runnable {
      * @param e   The event to send
      * @return {@link Future<T>} object that may be resolved later by a different
      * micro-service processing this event.
-     * null in case no microservice has subscribed to {@code e.getClass()}.
+     * null in case no micro-service has subscribed to {@code e.getClass()}.
      */
     protected final <T> Future<T> sendEvent(Event<T> e) {
         return messageBus.sendEvent(e);
@@ -166,37 +165,28 @@ public abstract class MicroService implements Runnable {
     }
 
     /**
-     * The entry point of the micro-service. TODO: you must complete this code
+     * The entry point of the micro-service.
      * otherwise you will end up in an infinite loop.
      */
     @Override
     public void run() {
 
         initialize();
-        Callback<TerminateBroadcast> terminateCallback = (TerminateBroadcast b) -> {
-            terminate();
-        };
+        Callback<TerminateBroadcast> terminateCallback = (TerminateBroadcast b) -> terminate();
         subscribeBroadcast(TerminateBroadcast.class, terminateCallback); //Every microservice will be terminated at the end of the program's duration
+        Message message;
 
         while (!terminated) {
+
             try {
-                if (task != null) {
-
-                    if (task.getFuture().isDone()) {
-                        messages_callbacks.get(task.getClass()).call(task);
-                        //task = null; the callback will decide whether to set it to null or not.
-                    }
-                    if (messageBus.isMessageQueueEmpty(this)) continue;
-
-                }
-                Message message = messageBus.awaitMessage(this);
+                message = messageBus.awaitMessage(this);
                 messages_callbacks.get(message.getClass()).call(message);
 
             } catch (InterruptedException exp) {
                 System.out.println("thread:" + Thread.currentThread().getId() + " interrupted thread:" + name);
             }
         }
-        logger.info(String.format("%s service is terminating", this.name));
+
         messageBus.unregister(this);
     }
 

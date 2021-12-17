@@ -34,7 +34,6 @@ public class GPUService extends MicroService {
     protected void initialize() {
         logger.info(String.format("%s GPU service has started", this.name));
         this.subscribeBroadcast(TickBroadcast.class, tickBroadcastMessage -> {
-            //logger.info(String.format("%s GPU service handles tickBroadcastMessage", this.name));
             this.gpu.increaseTicks();
             if (gpu.isTrainingModel) {
                 if (gpu.isTrainingDataBatch) {

@@ -15,6 +15,7 @@ public class Student {
     private final ArrayList<Model> models;
     private AtomicInteger publications = new AtomicInteger(0);
     private AtomicInteger papersRead = new AtomicInteger(0);
+
     public Student(String name, String department, String status, ArrayList<Model> models) {
         this.name = name;
         this.department = department;

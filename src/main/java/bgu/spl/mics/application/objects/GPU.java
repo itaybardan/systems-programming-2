@@ -95,7 +95,9 @@ public class GPU {
         this.isTrainingDataBatch = false;
         this.trainedDataBatches++;
         if (!this.dataBatches.isEmpty()){
-            this.sendDataBatchToCluster(this.dataBatches.remove(0));
+            DataBatch dataBatchToSend = this.dataBatches.remove(0);
+            this.cluster.dataBatchToGpu.put(dataBatchToSend, this);
+            this.sendDataBatchToCluster(dataBatchToSend);
         }
     }
 
