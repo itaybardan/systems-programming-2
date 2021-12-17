@@ -5,7 +5,7 @@ import bgu.spl.mics.Future;
 import bgu.spl.mics.application.objects.Model;
 
 public class TrainModelEvent implements Event<Model> {
-    private final Model model;
+    public final Model model;
     private Future<Model> future;
 
     public TrainModelEvent(Model _model) {

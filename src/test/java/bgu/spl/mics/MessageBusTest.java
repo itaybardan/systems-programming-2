@@ -1,21 +1,24 @@
 package bgu.spl.mics;
 
 
+
 import bgu.spl.mics.application.messages.broadcasts.TickBroadcast;
 import bgu.spl.mics.application.messages.events.TrainModelEvent;
 import bgu.spl.mics.example.messages.ExampleBroadcast;
 import bgu.spl.mics.example.messages.ExampleEvent;
+
 import org.junit.Before;
 import org.junit.Test;
+
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.*;
 
 
-class ExampleMicroService extends MicroService {
+class ExampleMicroService extends  MicroService {
     /**
-     * @param name the microservice name (used mainly for debugging purposes -
+     * @param name the micro-service name (used mainly for debugging purposes -
      *             does not have to be unique)
      */
 
@@ -51,34 +54,34 @@ public class MessageBusTest { //each test needs to be done separately as Message
     MessageBusImpl messageBus;
     ExampleEvent event;
     ExampleBroadcast broadcast;
-    bgu.spl.mics.example.ExampleMicroService microService;
+    ExampleMicroService microService;
 
     @Before
-    public void setUp() {
+    public void setUp(){
         messageBus = MessageBusImpl.getInstance();
         event = new ExampleEvent("test_event");
         broadcast = new ExampleBroadcast("test_broadcast");
-        microService = new bgu.spl.mics.example.ExampleMicroService("test_micro_service");
+        microService = new ExampleMicroService("test_micro_service");
     }
 
     @Test
     public void subscribeEventTest() {
 
-        assertTrue(messageBus.isEventSubsEmpty(TrainModelEvent.class));
+        assertEquals(true, messageBus.isEventSubsEmpty(TrainModelEvent.class));
         messageBus.register(microService);
 
         messageBus.subscribeEvent(event.getClass(), microService);
-        assertFalse(messageBus.isEventSubsEmpty(event.getClass()));
+        assertEquals(false, messageBus.isEventSubsEmpty(event.getClass()));
 
     }
 
     @Test
     public void subscribeBroadcastTest() {
 
-        assertTrue(messageBus.isBroadcastSubsEmpty(broadcast.getClass()));
+        assertEquals(true, messageBus.isBroadcastSubsEmpty(broadcast.getClass()));
         messageBus.register(microService);
         messageBus.subscribeBroadcast(broadcast.getClass(), microService);
-        assertFalse(messageBus.isBroadcastSubsEmpty(broadcast.getClass()));
+        assertEquals(false, messageBus.isBroadcastSubsEmpty(broadcast.getClass()));
 
         messageBus.unregister(microService);
 
@@ -108,21 +111,20 @@ public class MessageBusTest { //each test needs to be done separately as Message
 
         AtomicBoolean wasNotifiedByBroadcast = new AtomicBoolean(false);
 
-        Thread thread = new Thread(() -> {
+        Thread thread = new Thread( () -> {
             microService.initialize();
             wasNotifiedByBroadcast.set(true);
         });
         thread.start();
 
         assertFalse(thread.isInterrupted());
-        Thread thread1 = new Thread(() -> messageBus.sendBroadcast(broadcast));
+        Thread thread1 = new Thread( () -> messageBus.sendBroadcast(broadcast));
         thread1.start();
 
 
-        try {
+        try{
             thread.join();
-        } catch (Exception e) {
-        }
+        }catch (Exception e){}
 
         assertTrue(wasNotifiedByBroadcast.get());
 
@@ -147,7 +149,7 @@ public class MessageBusTest { //each test needs to be done separately as Message
     public void registerTest() {
 
 
-        bgu.spl.mics.example.ExampleMicroService microService2 = new bgu.spl.mics.example.ExampleMicroService("test");
+        ExampleMicroService microService2 = new ExampleMicroService("test");
 
         messageBus.register(microService);
         messageBus.register(microService2);
@@ -180,7 +182,7 @@ public class MessageBusTest { //each test needs to be done separately as Message
         messageBus = MessageBusImpl.getInstance();
 
 
-        bgu.spl.mics.example.ExampleMicroService microService1 = new bgu.spl.mics.example.ExampleMicroService("not_exists");
+        ExampleMicroService microService1 = new ExampleMicroService("not_exists");
         messageBus.unregister(microService1);
         assertThrows(IllegalStateException.class, () -> messageBus.awaitMessage(microService1));
         messageBus.register(microService1);

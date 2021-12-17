@@ -1,15 +1,17 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.Callback;
-import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.broadcasts.PublishConferenceBroadcast;
+import bgu.spl.mics.application.messages.broadcasts.TickBroadcast;
 import bgu.spl.mics.application.messages.events.PublishResultsEvent;
 import bgu.spl.mics.application.messages.events.TestModelEvent;
 import bgu.spl.mics.application.messages.events.TrainModelEvent;
 import bgu.spl.mics.application.objects.Model;
 import bgu.spl.mics.application.objects.ModelStatus;
 import bgu.spl.mics.application.objects.Student;
+
+import java.util.logging.Logger;
 
 
 /**
@@ -22,6 +24,7 @@ import bgu.spl.mics.application.objects.Student;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class StudentService extends MicroService {
+    private static final Logger logger = Logger.getLogger(StudentService.class.getName());
     private final Student student;
     private int currentModelIndex;
 
@@ -34,17 +37,18 @@ public class StudentService extends MicroService {
 
     @Override
     protected void initialize() {
+        logger.info(String.format("%s Student Service has started ", this.name));
 
         //Setting up Callbacks
         Callback<PublishConferenceBroadcast> publishConferenceCallback = (PublishConferenceBroadcast b) -> {
-            student.incrementPublifications(b.getPublishes(student.getModels()));
+            student.incrementPublications(b.getPublishes(student.getModels()));
             student.incrementPapersRead(b.getPapersRead(student.getModels()));
         };
 
         Callback<TrainModelEvent> trainModelCallback = (TrainModelEvent e) -> {
 
             Model model = e.getModel();
-            TestModelEvent testModelEvent = new TestModelEvent(model);
+            TestModelEvent testModelEvent = new TestModelEvent(model, student.getStatus());
             testModelEvent.setFuture(sendEvent(testModelEvent)); //sending test model .
             task = testModelEvent;
 
@@ -60,18 +64,28 @@ public class StudentService extends MicroService {
             }
 
             if (++currentModelIndex < student.getModels().size()) { //Will send TrainModel for the next model, if there is one
-                task = new TrainModelEvent(student.getModels().get(currentModelIndex));
-                Future<TestModelEvent> future = sendEvent(task);
-                task.setFuture(future);
+
+                model = student.getModels().get(currentModelIndex);
+                TrainModelEvent trainModelEvent = new TrainModelEvent(model);
+                trainModelEvent.setFuture(sendEvent(trainModelEvent));
+                task = trainModelEvent;
+
             } else task = null;
+        };
+        Callback<TickBroadcast> tickBroadcastCallback = (TickBroadcast b) -> {
+            if (task != null && task.getFuture().isDone()) {
+                messages_callbacks.get(task.getClass()).call(task);
+            }
         };
 
         //Setting up one's tasks.
         messages_callbacks.put(TrainModelEvent.class, trainModelCallback);
         messages_callbacks.put(TestModelEvent.class, testModelCallback);
 
+
         //Subscribing to necessary events and broadcasts
         subscribeBroadcast(PublishConferenceBroadcast.class, publishConferenceCallback);
+        subscribeBroadcast(TickBroadcast.class, tickBroadcastCallback);
 
         //Sending the first TrainModel
         Model firstModel = student.getModels().get(0);

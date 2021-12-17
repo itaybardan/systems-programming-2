@@ -13,8 +13,9 @@ public class Student {
     private final String department;
     private final Degree status;
     private final ArrayList<Model> models;
-    private AtomicInteger publications = new AtomicInteger(0);
-    private AtomicInteger papersRead = new AtomicInteger(0);
+    private final AtomicInteger publications = new AtomicInteger(0);
+    private final AtomicInteger papersRead = new AtomicInteger(0);
+
     public Student(String name, String department, String status, ArrayList<Model> models) {
         this.name = name;
         this.department = department;
@@ -67,4 +68,5 @@ public class Student {
     public enum Degree {
         MSc, PhD
     }
+
 }
