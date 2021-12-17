@@ -19,8 +19,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class MessageBusImpl implements MessageBus {
-
-
     private Map<Class<? extends Event>, MutablePair<CopyOnWriteArrayList<MicroService>, AtomicInteger>> event_subscribers; //READ BELOW
     //this hashmap will contain all the event classes, and for each, a pair of:all the subscribed microservices for that event class,
     //and the counter needed for the round-robin implementation.

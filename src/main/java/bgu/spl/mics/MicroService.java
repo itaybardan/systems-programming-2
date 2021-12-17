@@ -2,9 +2,11 @@ package bgu.spl.mics;
 
 
 import bgu.spl.mics.application.messages.broadcasts.TerminateBroadcast;
+import bgu.spl.mics.application.services.TimeService;
 
 import java.util.HashMap;
 import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * The MicroService is an abstract class that any micro-service in the system
@@ -25,6 +27,7 @@ import java.util.Set;
  * <p>
  */
 public abstract class MicroService implements Runnable {
+    private static final Logger logger = Logger.getLogger(MicroService.class.getName());
     protected final String name;
     protected boolean terminated = false;
     protected MessageBusImpl messageBus = MessageBusImpl.getInstance();
@@ -36,7 +39,7 @@ public abstract class MicroService implements Runnable {
 
 
     /**
-     * @param name the micro-service name (used mainly for debugging purposes -
+     * @param name the microservice name (used mainly for debugging purposes -
      *             does not have to be unique)
      */
     public MicroService(String name) {
@@ -64,7 +67,7 @@ public abstract class MicroService implements Runnable {
      * @param type     The {@link Class} representing the type of event to
      *                 subscribe to.
      * @param callback The callback that should be called when messages of type
-     *                 {@code type} are taken from this micro-service message
+     *                 {@code type} are taken from this microservice message
      *                 queue.
      */
     protected final <T, E extends Event<T>> void subscribeEvent(Class<E> type, Callback<E> callback) {
@@ -90,7 +93,7 @@ public abstract class MicroService implements Runnable {
      * @param type     The {@link Class} representing the type of broadcast
      *                 message to subscribe to.
      * @param callback The callback that should be called when messages of type
-     *                 {@code type} are taken from this micro-service message
+     *                 {@code type} are taken from this microservice message
      *                 queue.
      */
     protected final <B extends Broadcast> void subscribeBroadcast(Class<B> type, Callback<B> callback) {
@@ -109,7 +112,7 @@ public abstract class MicroService implements Runnable {
      * @param e   The event to send
      * @return {@link Future<T>} object that may be resolved later by a different
      * micro-service processing this event.
-     * null in case no micro-service has subscribed to {@code e.getClass()}.
+     * null in case no microservice has subscribed to {@code e.getClass()}.
      */
     protected final <T> Future<T> sendEvent(Event<T> e) {
         return messageBus.sendEvent(e);
@@ -193,7 +196,7 @@ public abstract class MicroService implements Runnable {
                 System.out.println("thread:" + Thread.currentThread().getId() + " interrupted thread:" + name);
             }
         }
-
+        logger.info(String.format("%s service is terminating", this.name));
         messageBus.unregister(this);
     }
 

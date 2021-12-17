@@ -11,6 +11,8 @@ import bgu.spl.mics.application.objects.Model;
 import bgu.spl.mics.application.objects.ModelStatus;
 import bgu.spl.mics.application.objects.Student;
 
+import java.util.logging.Logger;
+
 
 /**
  * Student is responsible for sending the {@link TrainModelEvent},
@@ -22,6 +24,7 @@ import bgu.spl.mics.application.objects.Student;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class StudentService extends MicroService {
+    private static final Logger logger = Logger.getLogger(StudentService.class.getName());
     private final Student student;
     private int currentModelIndex;
 
@@ -34,6 +37,7 @@ public class StudentService extends MicroService {
 
     @Override
     protected void initialize() {
+        logger.info(String.format("%s Student Service has started ", this.name));
 
         //Setting up Callbacks
         Callback<PublishConferenceBroadcast> publishConferenceCallback = (PublishConferenceBroadcast b) -> {

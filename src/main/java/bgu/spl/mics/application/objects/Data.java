@@ -5,17 +5,16 @@ package bgu.spl.mics.application.objects;
  * Add fields and methods to this class as you see fit (including public methods and constructors).
  */
 public class Data {
-    private final DataType type;
-    private final int processed;
-    private final int size;
+    public final DataType type;
+    public final int size;
+
     public Data(DataType type, int size) {
         this.type = type;
-        this.processed = 0;
         this.size = size;
     }
 
-    public int getTickTime() {
-        switch (this.type) {
+    public static int getTickTime(DataType type) {
+        switch (type) {
             case images:
                 return 4;
             case tabular:

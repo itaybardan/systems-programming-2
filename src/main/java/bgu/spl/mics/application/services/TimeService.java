@@ -4,6 +4,7 @@ import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.broadcasts.TerminateBroadcast;
 import bgu.spl.mics.application.messages.broadcasts.TickBroadcast;
 
+import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -23,8 +24,8 @@ public class TimeService extends MicroService {
     private static final Logger logger = Logger.getLogger(TimeService.class.getName());
     private final int duration;
     private final int tickTime;
-    private final ScheduledExecutorService scheduler;
     private int currentTick;
+    private final Timer timer;
 
 
     public TimeService(String name, int duration, int tickTime) {
@@ -32,30 +33,22 @@ public class TimeService extends MicroService {
         this.duration = duration;
         this.tickTime = tickTime;
         this.currentTick = 1;
-        this.scheduler = Executors.newScheduledThreadPool(2);
+        this.timer = new Timer();
     }
 
     @Override
     protected void initialize() {
         logger.info(this.name + " has started");
+
         TimerTask task = new TimerTask() {
             public void run() {
                 sendBroadcast(new TickBroadcast(currentTick));
                 currentTick++;
                 if (currentTick > duration)
-                    cancel();
+                    timer.cancel();
             }
         };
-        this.scheduler.scheduleAtFixedRate(task, 0, this.tickTime, TimeUnit.MILLISECONDS);
-
-        while (this.currentTick < duration) {
-            try {
-                TimeUnit.MILLISECONDS.sleep((long) this.tickTime * this.duration);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        this.scheduler.shutdown();
+        this.timer.scheduleAtFixedRate(task, 0, this.tickTime);
         sendBroadcast(new TerminateBroadcast());
         terminate();
     }

@@ -9,6 +9,7 @@ import bgu.spl.mics.application.objects.ModelStatus;
 import bgu.spl.mics.application.objects.Student;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.logging.Logger;
 
 /**
  * GPU service is responsible for handling the
@@ -19,6 +20,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class GPUService extends MicroService {
+    private static final Logger logger = Logger.getLogger(GPUService.class.getName());
     private final GPU gpu;
     public ConcurrentLinkedQueue<TrainModelEvent> trainModelTasks;
 
@@ -30,13 +32,15 @@ public class GPUService extends MicroService {
 
     @Override
     protected void initialize() {
+        logger.info(String.format("%s GPU service has started", this.name));
         this.subscribeBroadcast(TickBroadcast.class, tickBroadcastMessage -> {
+            //logger.info(String.format("%s GPU service handles tickBroadcastMessage", this.name));
             this.gpu.increaseTicks();
             if (gpu.isTrainingModel) {
                 if (gpu.isTrainingDataBatch) {
                     if (gpu.ticks - gpu.startTrainingTick == GPU.typeToTrainTickTime.get(gpu.type)) {
                         gpu.finishTrainingDataBatch();
-                        if (gpu.dataBatches.isEmpty()) {
+                        if (gpu.trainedDataBatches == gpu.event.model.getSize() / 1000) {
                             gpu.finishTrainingModel();
                             this.complete(gpu.event, gpu.event.model);
                         }
@@ -52,6 +56,8 @@ public class GPUService extends MicroService {
         });
 
         this.subscribeEvent(TestModelEvent.class, testModelMessage -> {
+            logger.info(String.format("%s GPU service handles testModelMessage, model name is: %s",
+                    this.name, testModelMessage.getModel().getName()));
             if (testModelMessage.getStudentDegree() == Student.Degree.PhD) {
                 if (Math.random() <= 0.8) {
                     this.complete(testModelMessage, ModelStatus.Good);
@@ -68,6 +74,8 @@ public class GPUService extends MicroService {
         });
 
         this.subscribeEvent(TrainModelEvent.class, trainModelMessage -> {
+            logger.info(String.format("%s GPU service handles trainModelMessage, model name is: %s",
+                    this.name, trainModelMessage.model.getName()));
             trainModelTasks.add(trainModelMessage);
         });
     }

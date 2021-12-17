@@ -1,14 +1,10 @@
 package bgu.spl.mics.application.objects;
 
 
-import org.apache.commons.lang3.tuple.MutablePair;
-
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Passive object representing the cluster.
@@ -18,15 +14,32 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Add fields and methods to this class as you see fit (including public methods and constructors).
  */
 public class Cluster {
-    // TODO: add statistics variable
+    public static class Statistics {
+        public CopyOnWriteArrayList<String> trainedModelsNames;
+        public AtomicInteger processedDataBatches;
+        public AtomicInteger cpuTimeUsed;
+        public AtomicInteger gpuTimeUsed;
+
+        public Statistics(CopyOnWriteArrayList<String> trainedModelsNames, AtomicInteger processedDataBatches, AtomicInteger cpuTimeUsed, AtomicInteger gpuTimeUsed) {
+            this.trainedModelsNames = trainedModelsNames;
+            this.processedDataBatches = processedDataBatches;
+            this.cpuTimeUsed = cpuTimeUsed;
+            this.gpuTimeUsed = gpuTimeUsed;
+        }
+    }
+
+    public Statistics statistics;
     public ConcurrentHashMap<DataBatch, GPU> dataBatchToGpu;
     public CopyOnWriteArrayList<DataBatch> unprocessedDataBatches;
     public ConcurrentHashMap<GPU, CopyOnWriteArrayList<DataBatch>> gpuToProcessedDataBatches;
+    public final Object unprocessedDataBatchesLock = new Object();
 
     public Cluster() {
         this.unprocessedDataBatches = new CopyOnWriteArrayList<>();
         this.dataBatchToGpu = new ConcurrentHashMap<>();
         this.gpuToProcessedDataBatches = new ConcurrentHashMap<>();
+        this.statistics = new Statistics(new CopyOnWriteArrayList<>(), new AtomicInteger(0),
+                new AtomicInteger(0), new AtomicInteger(0));
     }
 
     /**

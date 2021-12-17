@@ -8,6 +8,7 @@ import bgu.spl.mics.application.messages.events.PublishResultsEvent;
 import bgu.spl.mics.application.objects.ConferenceInformation;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 
 /**
  * Conference service is in charge of
@@ -19,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class ConferenceService extends MicroService {
-
+    private static final Logger logger = Logger.getLogger(ConferenceService.class.getName());
     private final ConferenceInformation conference;
     private final int startTime;
     private final AtomicInteger currentTime;
@@ -33,6 +34,7 @@ public class ConferenceService extends MicroService {
 
     @Override
     protected void initialize() {
+        logger.info(String.format("%s Conference Service started ", this.name));
 
         synchronized (this) {
             try {
