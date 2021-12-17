@@ -1,6 +1,6 @@
 package bgu.spl.mics.application.services;
 
-import bgu.spl.mics.Callback;
+import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.broadcasts.PublishConferenceBroadcast;
 import bgu.spl.mics.application.messages.broadcasts.TickBroadcast;
@@ -13,6 +13,11 @@ import bgu.spl.mics.application.objects.Student;
 
 import java.util.logging.Logger;
 
+import static bgu.spl.mics.application.services.State.*;
+
+enum State {
+    WaitingForTrainToFinish, WaitingForTestToFinish, DoneTrainingModels
+}
 
 /**
  * Student is responsible for sending the {@link TrainModelEvent},
@@ -25,76 +30,51 @@ import java.util.logging.Logger;
  */
 public class StudentService extends MicroService {
     private static final Logger logger = Logger.getLogger(StudentService.class.getName());
+
+    public State state;
     private final Student student;
     private int currentModelIndex;
+    public Future<Model> future;
+    public Future<ModelStatus> testFuture;
 
 
-    public StudentService(Student _student) {
-        super(_student.getName()); //Service and object will share the same name
-        student = _student;
+    public StudentService(Student student) {
+        super(student.getName()); //Service and object will share the same name
+        this.student = student;
         currentModelIndex = 0;
     }
 
     @Override
     protected void initialize() {
-        logger.info(String.format("%s Student Service has started ", this.name));
+        logger.info(String.format("%s Student Service started ", this.name));
+        this.future = this.sendEvent(new TrainModelEvent(this.student.getModels().get(this.currentModelIndex)));
+        this.state = WaitingForTrainToFinish;
 
-        //Setting up Callbacks
-        Callback<PublishConferenceBroadcast> publishConferenceCallback = (PublishConferenceBroadcast b) -> {
-            student.incrementPublications(b.getPublishes(student.getModels()));
-            student.incrementPapersRead(b.getPapersRead(student.getModels()));
-        };
-
-        Callback<TrainModelEvent> trainModelCallback = (TrainModelEvent e) -> {
-
-            Model model = e.getModel();
-            TestModelEvent testModelEvent = new TestModelEvent(model, student.getStatus());
-            testModelEvent.setFuture(sendEvent(testModelEvent)); //sending test model .
-            task = testModelEvent;
-
-        };
-
-        Callback<TestModelEvent> testModelCallback = (TestModelEvent e) -> {
-            Model model = e.getModel();
-            model.setModelStatus(e.getFuture().get()); //the Future of TestModelEvent will be of type enum ModelStatus - Good or Bad.
-
-            if (model.getModelStatus() == ModelStatus.Good) {
-                PublishResultsEvent publishResultsEvent = new PublishResultsEvent(model);
-                publishResultsEvent.setFuture(sendEvent(publishResultsEvent));
+        this.subscribeBroadcast(TickBroadcast.class, tickBroadcastMessage -> {
+            if (this.state == WaitingForTrainToFinish) {
+                if (this.future.isDone()) {
+                    this.testFuture = sendEvent(new TestModelEvent(this.future.get(), this.student.getStatus()));
+                    this.state = WaitingForTestToFinish;
+                }
+            } else if (this.state == WaitingForTestToFinish) {
+                if (this.testFuture.isDone()) {
+                    if (this.testFuture.get() == ModelStatus.Good) {
+                        sendEvent(new PublishResultsEvent(this.future.get()));
+                    }
+                    this.currentModelIndex++;
+                    if (currentModelIndex < this.student.getModels().size()) {
+                        this.future = this.sendEvent(new TrainModelEvent(this.student.getModels().get(this.currentModelIndex)));
+                        this.state = WaitingForTrainToFinish;
+                    } else {
+                        this.state = DoneTrainingModels;
+                    }
+                }
             }
+        });
 
-            if (++currentModelIndex < student.getModels().size()) { //Will send TrainModel for the next model, if there is one
-
-                model = student.getModels().get(currentModelIndex);
-                TrainModelEvent trainModelEvent = new TrainModelEvent(model);
-                trainModelEvent.setFuture(sendEvent(trainModelEvent));
-                task = trainModelEvent;
-
-            } else task = null;
-        };
-        Callback<TickBroadcast> tickBroadcastCallback = (TickBroadcast b) -> {
-            if (task != null && task.getFuture().isDone()) {
-                messages_callbacks.get(task.getClass()).call(task);
-            }
-        };
-
-        //Setting up one's tasks.
-        messages_callbacks.put(TrainModelEvent.class, trainModelCallback);
-        messages_callbacks.put(TestModelEvent.class, testModelCallback);
-
-
-        //Subscribing to necessary events and broadcasts
-        subscribeBroadcast(PublishConferenceBroadcast.class, publishConferenceCallback);
-        subscribeBroadcast(TickBroadcast.class, tickBroadcastCallback);
-
-        //Sending the first TrainModel
-        Model firstModel = student.getModels().get(0);
-        if (firstModel != null) {
-            TrainModelEvent trainModelEvent = new TrainModelEvent(firstModel);
-            trainModelEvent.setFuture(sendEvent(trainModelEvent));
-            task = trainModelEvent;
-        }
-
+        subscribeBroadcast(PublishConferenceBroadcast.class, PublishConferenceBroadcastMessage -> {
+            student.incrementPublications(PublishConferenceBroadcastMessage.getPublishes(student.getModels()));
+            student.incrementPapersRead(PublishConferenceBroadcastMessage.getPapersRead(student.getModels()));
+        });
     }
-
 }

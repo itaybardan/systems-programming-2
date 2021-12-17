@@ -22,7 +22,7 @@ public class CPUService extends MicroService {
 
     @Override
     protected void initialize() {
-        logger.info(String.format("%s CPU Service has started ", this.name));
+        logger.info(String.format("%s CPU Service started ", this.name));
 
         this.subscribeBroadcast(TickBroadcast.class, tickBroadcastMessage -> {
             cpu.increaseTicks();

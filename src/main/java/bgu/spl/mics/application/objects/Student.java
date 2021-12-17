@@ -1,6 +1,9 @@
 package bgu.spl.mics.application.objects;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -21,6 +24,9 @@ public class Student {
         this.department = department;
         this.status = searchEnum(Degree.class, status);
         this.models = models;
+        this.models.sort((o1, o2) -> o1.getSize() - o2.getSize());
+
+
     }
     public Student(String name, String department, Degree status, ArrayList<Model> models) {
         this.name = name;
