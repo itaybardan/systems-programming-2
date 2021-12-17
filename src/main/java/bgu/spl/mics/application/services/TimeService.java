@@ -19,8 +19,8 @@ import bgu.spl.mics.application.messages.broadcasts.TickBroadcast;
 public class TimeService extends MicroService {
 
     private Timer timer;
-    private int programDuration;
-    private int tick_length;
+    private final int programDuration;
+    private final int tick_length;
     private AtomicInteger currentTime;
 
 
