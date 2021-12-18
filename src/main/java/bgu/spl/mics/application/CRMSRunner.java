@@ -31,7 +31,7 @@ public class CRMSRunner {
     public static void main(String[] args) {
         InputInfo inputInfo = parseJsonInputFile();
         ImmutablePair<ArrayList<MicroService>, TimeService> microServicesPair = createMicroServices(inputInfo);
-        initMicroServices(microServicesPair.getLeft(), microServicesPair.getRight());
+        initMicroServices(microServicesPair.getLeft(), microServicesPair.getRight(), inputInfo.gpus.size());
         writeOutputFile(inputInfo);
     }
 
@@ -91,10 +91,18 @@ public class CRMSRunner {
         return new ImmutablePair<>(microServices, timeService);
     }
 
-    private static void initMicroServices(ArrayList<? extends MicroService> microServices, TimeService ts) {
+    private static void initMicroServices(ArrayList<? extends MicroService> microServices, TimeService ts, int gpusSize) {
         ExecutorService executor = Executors.newFixedThreadPool(microServices.size() + 1);
-        for (MicroService ms : microServices) {
+        for (int i = 0; i < microServices.size(); i++) {
+            MicroService ms = microServices.get(i);
             executor.submit(ms);
+            if (i == gpusSize) {
+                try {
+                    TimeUnit.MILLISECONDS.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         executor.submit(ts);
         executor.shutdown();

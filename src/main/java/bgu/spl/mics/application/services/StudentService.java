@@ -47,12 +47,6 @@ public class StudentService extends MicroService {
     @Override
     protected void initialize() {
         logger.info(String.format("%s Student Service started ", this.name));
-        if (!this.student.getModels().isEmpty()) {
-            this.trainFuture = this.sendEvent(new TrainModelEvent(this.student.getModels().get(this.currentModelIndex)));
-            this.state = WaitingForTrainToFinish;
-        } else {
-            this.state = DoneTrainingModels;
-        }
 
         this.subscribeBroadcast(TickBroadcast.class, tickBroadcastMessage -> {
             if (this.state == WaitingForTrainToFinish) {
@@ -81,5 +75,12 @@ public class StudentService extends MicroService {
             student.incrementPublications(PublishConferenceBroadcastMessage.getPublishes(student.getModels()));
             student.incrementPapersRead(PublishConferenceBroadcastMessage.getPapersRead(student.getModels()));
         });
+
+        if (!this.student.getModels().isEmpty()) {
+            this.trainFuture = this.sendEvent(new TrainModelEvent(this.student.getModels().get(this.currentModelIndex)));
+            this.state = WaitingForTrainToFinish;
+        } else {
+            this.state = DoneTrainingModels;
+        }
     }
 }
