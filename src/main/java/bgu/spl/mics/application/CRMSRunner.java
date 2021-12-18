@@ -96,7 +96,7 @@ public class CRMSRunner {
         for (int i = 0; i < microServices.size(); i++) {
             MicroService ms = microServices.get(i);
             executor.submit(ms);
-            if (i == gpusSize) {
+            if (i == gpusSize - 1) {
                 try {
                     TimeUnit.MILLISECONDS.sleep(100);
                 } catch (InterruptedException e) {
