@@ -1,5 +1,7 @@
 package bgu.spl.mics.application;
 
+import bgu.spl.mics.Message;
+import bgu.spl.mics.MessageBusImpl;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.objects.*;
 import bgu.spl.mics.application.services.*;
@@ -64,6 +66,12 @@ public class CRMSRunner {
 
     private static ImmutablePair<ArrayList<MicroService>, TimeService> createMicroServices(InputInfo inputInfo) {
         ArrayList<MicroService> microServices = new ArrayList<>();
+
+        for (int i = 0; i < inputInfo.gpus.size(); i++) {
+            GPU gpu = inputInfo.gpus.get(i);
+            microServices.add(new GPUService(String.valueOf(i), gpu));
+        }
+
         for (Student student : inputInfo.students) {
             microServices.add(new StudentService(student));
         }
@@ -77,10 +85,6 @@ public class CRMSRunner {
             microServices.add(new CPUService(String.valueOf(i), cpu));
         }
 
-        for (int i = 0; i < inputInfo.gpus.size(); i++) {
-            GPU gpu = inputInfo.gpus.get(i);
-            microServices.add(new GPUService(String.valueOf(i), gpu));
-        }
 
         TimeService timeService = new TimeService("time-service", inputInfo.tickTime, inputInfo.duration);
 
