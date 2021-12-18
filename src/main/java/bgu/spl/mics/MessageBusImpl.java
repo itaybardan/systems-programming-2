@@ -68,7 +68,7 @@ public class MessageBusImpl implements MessageBus {
     }
 
     public boolean isBroadcastSubsEmpty(Class<? extends Broadcast> type) {
-        if (broadcastSubscribers.containsKey(type)) return true;
+        if (!broadcastSubscribers.containsKey(type)) return true;
         return broadcastSubscribers.get(type).isEmpty();
     }
 
@@ -81,9 +81,8 @@ public class MessageBusImpl implements MessageBus {
      * Will be used by microservices which have other tasks they need to work on, not via the bus
      */
     public Boolean isMessageQueueEmpty(MicroService m) {
-
         if (!messagesQueue.containsKey(m)) return true;
-        return messagesQueue.get(m).size() == 0;
+        return messagesQueue.get(m).isEmpty();
     }
 
     @Override
@@ -114,7 +113,7 @@ public class MessageBusImpl implements MessageBus {
     public void sendBroadcast(Broadcast b) {
         Class<? extends Broadcast> type = b.getClass();
 
-        if (!broadcastSubscribers.containsKey(type) || broadcastSubscribers.get(type).size() == 0) return;
+        if (!broadcastSubscribers.containsKey(type) || broadcastSubscribers.get(type).isEmpty()) return;
         if (type == TerminateBroadcast.class) {
             for (MicroService m : broadcastSubscribers.get(type)) {
                 messagesQueue.get(m).clear();
@@ -124,8 +123,10 @@ public class MessageBusImpl implements MessageBus {
 
         } else {
             for (MicroService m : broadcastSubscribers.get(type)) {
-                messagesQueue.get(m).add(b);
-                m.notifyMicroService();
+                if(messagesQueue.get(m) != null) { //Avoiding getting to a null array that exists mid unregistration
+                    messagesQueue.get(m).add(b);
+                    m.notifyMicroService();
+                }
             }
         }
     }

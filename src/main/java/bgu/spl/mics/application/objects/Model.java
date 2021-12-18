@@ -9,14 +9,14 @@ public class Model {
     private final String name;
     private final ModelType type;
     private final int size;
-    private final AtomicReference<TestStatus> testStatus;
+    private TestStatus testStatus;
     private final AtomicReference<ModelStatus> modelStatus;
 
     public Model(String name, ModelType type, int size) {
         this.name = name;
         this.type = type;
         this.size = size;
-        testStatus = new AtomicReference<>(TestStatus.Untested);
+        testStatus = TestStatus.Untested;
         modelStatus = new AtomicReference<>(ModelStatus.Undecided);
     }
 
@@ -25,7 +25,7 @@ public class Model {
         this.name = name;
         this.type = ModelType.valueOf(type.toLowerCase(Locale.ROOT));
         this.size = size;
-        testStatus = new AtomicReference<>(TestStatus.Untested);
+        testStatus = TestStatus.Untested;
         modelStatus = new AtomicReference<>(ModelStatus.Undecided);
     }
 
@@ -41,13 +41,17 @@ public class Model {
         return size;
     }
 
+    public TestStatus getTestStatus(){ //For json
+        return testStatus;
+    }
+
     public ModelStatus getModelStatus() {
         return modelStatus.get();
     }
 
     public void setModelStatus(ModelStatus _status) {
         if (modelStatus.get() == ModelStatus.Undecided)
-            testStatus.set(TestStatus.Tested);
+            testStatus = TestStatus.Tested;
         modelStatus.set(_status);
     }
 

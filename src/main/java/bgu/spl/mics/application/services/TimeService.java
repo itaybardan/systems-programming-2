@@ -22,7 +22,6 @@ public class TimeService extends MicroService {
     private Timer timer;
     private final int programDuration;
     private final int tickLength;
-    private AtomicInteger currentTime;
 
 
     public TimeService(String name, int _tick_length, int _programDuration) {
