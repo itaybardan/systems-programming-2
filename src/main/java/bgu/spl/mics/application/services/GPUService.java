@@ -56,27 +56,14 @@ public class GPUService extends MicroService {
         });
 
         this.subscribeEvent(TestModelEvent.class, testModelMessage -> {
-            logger.info(String.format("%s GPU service handles testModelMessage, model name is: %s",
-                    this.name, testModelMessage.getModel().getName()));
-            if (testModelMessage.getStatus() == Student.Degree.PhD) {
-                if (Math.random() <= 0.8) {
-                    this.complete(testModelMessage, ModelStatus.Good);
-                } else {
-                    this.complete(testModelMessage, ModelStatus.Bad);
-                }
-            } else if (testModelMessage.getStatus() == Student.Degree.MSc) {
-                if (Math.random() <= 0.6) {
-                    this.complete(testModelMessage, ModelStatus.Good);
-                } else {
-                    this.complete(testModelMessage, ModelStatus.Bad);
-                }
+            double probability = testModelMessage.getStatus() == Student.Degree.PhD ? 0.8 : 0.6;
+            if (Math.random() <= probability) {
+                this.complete(testModelMessage, ModelStatus.Good);
+            } else {
+                this.complete(testModelMessage, ModelStatus.Bad);
             }
         });
 
-        this.subscribeEvent(TrainModelEvent.class, trainModelMessage -> {
-            logger.info(String.format("%s GPU service handles trainModelMessage, model name is: %s",
-                    this.name, trainModelMessage.model.getName()));
-            trainModelTasks.add(trainModelMessage);
-        });
+        this.subscribeEvent(TrainModelEvent.class, trainModelMessage -> trainModelTasks.add(trainModelMessage));
     }
 }
