@@ -32,7 +32,7 @@ public class GPUService extends MicroService {
 
     @Override
     protected void initialize() {
-        logger.info(String.format("%s GPU service has started", this.name));
+        logger.info(String.format("%s GPU service started", this.name));
         this.subscribeBroadcast(TickBroadcast.class, tickBroadcastMessage -> {
             this.gpu.increaseTicks();
             //logger.info(String.format("%s GPU Service got tick broadcast: %d", this.name, this.gpu.ticks));

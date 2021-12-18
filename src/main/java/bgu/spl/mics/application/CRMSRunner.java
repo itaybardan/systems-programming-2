@@ -3,7 +3,8 @@ package bgu.spl.mics.application;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.objects.*;
 import bgu.spl.mics.application.services.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -13,13 +14,10 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 
 /**
  * This is the Main class of Compute Resources Management System application. You should parse the input file,
@@ -32,13 +30,32 @@ public class CRMSRunner {
         InputInfo inputInfo = parseJsonInputFile();
         ImmutablePair<ArrayList<MicroService>, TimeService> microServicesPair = createMicroServices(inputInfo);
         initMicroServices(microServicesPair.getLeft(), microServicesPair.getRight());
-        writeOutputFile(Cluster.getInstance());
+        writeOutputFile(inputInfo);
     }
 
-    private static void writeOutputFile(Cluster instance) {
+    public static class OutputInfo {
+        public CopyOnWriteArrayList<String> trainedModelsNames;
+        public int processedDataBatches;
+        public int cpuTimeUsed;
+        public int gpuTimeUsed;
+        public ArrayList<Student> students;
+        public ArrayList<ConferenceInformation> conferences;
+
+        public OutputInfo(InputInfo inputInfo) {
+            this.trainedModelsNames = Cluster.getInstance().statistics.trainedModelsNames;
+            this.processedDataBatches = Cluster.getInstance().statistics.processedDataBatches.get();
+            this.cpuTimeUsed = Cluster.getInstance().statistics.cpuTimeUsed.get();
+            this.gpuTimeUsed = Cluster.getInstance().statistics.gpuTimeUsed.get();
+            this.students = inputInfo.students;
+            this.conferences = inputInfo.conferences;
+        }
+    }
+
+    private static void writeOutputFile(InputInfo inputInfo) {
+        OutputInfo outputInfo = new OutputInfo(inputInfo);
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         try {
-            String json = ow.writeValueAsString(instance.statistics);
+            String json = ow.writeValueAsString(outputInfo);
             FileUtils.writeStringToFile(new File("output/output.json"), json, StandardCharsets.UTF_8);
         } catch (IOException e) {
             e.printStackTrace();

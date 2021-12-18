@@ -36,7 +36,7 @@ public class CPU {
     public void startProcessDataBatch() {
         this.isProcessing = true;
         this.startProcessTick = this.ticks;
-        logger.info(String.format("CPU start process data batch: %d", this.dataBatch.startIndex));
+        //logger.info(String.format("CPU start process data batch: %d", this.dataBatch.startIndex));
     }
 
     public void finishProcessing() {

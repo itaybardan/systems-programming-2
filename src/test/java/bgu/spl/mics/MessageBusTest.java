@@ -42,15 +42,12 @@ class ExampleMicroService extends  MicroService {
     }
 
     @Override
-    public synchronized void notifyMicroService() { //Used by bus when sending events/broadcasts to this micro service.
-
+    public synchronized void notifyMicroService() { //Used by bus when sending events/broadcasts to this microservice.
         notifyAll();
     }
 }
 
 public class MessageBusTest { //each test needs to be done separately as MessageBusImpl is a singleton
-
-
     MessageBusImpl messageBus;
     ExampleEvent event;
     ExampleBroadcast broadcast;
