@@ -1,7 +1,5 @@
 package bgu.spl.mics;
 
-
-
 import bgu.spl.mics.application.messages.broadcasts.TerminateBroadcast;
 import bgu.spl.mics.application.messages.broadcasts.TickBroadcast;
 import bgu.spl.mics.application.messages.events.PublishResultsEvent;
