@@ -34,10 +34,10 @@ class ExampleMicroService extends  MicroService {
     public ExampleMicroService(String name) {
         super(name);
 
-        messages_callbacks.put(ExampleEvent.class, (Object s) -> System.out.println(s));
-        messages_callbacks.put(ExampleBroadcast.class, (Object s) -> System.out.println(s));
+        messages_callbacks.put(ExampleEvent.class, System.out::println);
+        messages_callbacks.put(ExampleBroadcast.class, System.out::println);
         messages_callbacks.put(TickBroadcast.class, (Object s) -> System.out.println("time tick"));
-        messages_callbacks.put(PublishResultsEvent.class, (Object s) -> System.out.println(s));
+        messages_callbacks.put(PublishResultsEvent.class, System.out::println);
     }
 
     @Override
@@ -71,8 +71,6 @@ public class MessageBusTest { //each test needs to be done separately as Message
 
     @Test
     public void subscribeEventTest() {
-
-        messageBus.printEventSubs(PublishResultsEvent.class);
         assertTrue(messageBus.isEventSubsEmpty(PublishResultsEvent.class));
         messageBus.register(microService);
         messageBus.subscribeEvent(PublishResultsEvent.class, microService);
@@ -84,10 +82,10 @@ public class MessageBusTest { //each test needs to be done separately as Message
     @Test
     public void subscribeBroadcastTest() {
 
-        assertEquals(true, messageBus.isBroadcastSubsEmpty(TerminateBroadcast.class));
+        assertTrue(messageBus.isBroadcastSubsEmpty(TerminateBroadcast.class));
         messageBus.register(microService);
         messageBus.subscribeBroadcast(TerminateBroadcast.class, microService);
-        assertEquals(false, messageBus.isBroadcastSubsEmpty(TerminateBroadcast.class));
+        assertFalse(messageBus.isBroadcastSubsEmpty(TerminateBroadcast.class));
 
         messageBus.unregister(microService);
 
@@ -205,9 +203,7 @@ public class MessageBusTest { //each test needs to be done separately as Message
 
 
         TestModelEvent testModelEvent = new TestModelEvent(testModel, Student.Degree.MSc);
-        Thread thread1 = new Thread( () ->{
-            messageBus.sendEvent(testModelEvent);
-});
+        Thread thread1 = new Thread( () -> messageBus.sendEvent(testModelEvent));
 
         thread1.start();
         try {
