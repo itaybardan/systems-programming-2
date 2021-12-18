@@ -34,7 +34,7 @@ public class StudentService extends MicroService {
     public State state;
     private final Student student;
     private int currentModelIndex;
-    public Future<Model> future;
+    public Future<Model> trainFuture;
     public Future<ModelStatus> testFuture;
 
 
@@ -47,23 +47,28 @@ public class StudentService extends MicroService {
     @Override
     protected void initialize() {
         logger.info(String.format("%s Student Service started ", this.name));
-        this.future = this.sendEvent(new TrainModelEvent(this.student.getModels().get(this.currentModelIndex)));
-        this.state = WaitingForTrainToFinish;
+        if (!this.student.getModels().isEmpty()) {
+            this.trainFuture = this.sendEvent(new TrainModelEvent(this.student.getModels().get(this.currentModelIndex)));
+            this.state = WaitingForTrainToFinish;
+        } else {
+            this.state = DoneTrainingModels;
+        }
 
         this.subscribeBroadcast(TickBroadcast.class, tickBroadcastMessage -> {
             if (this.state == WaitingForTrainToFinish) {
-                if (this.future.isDone()) {
-                    this.testFuture = sendEvent(new TestModelEvent(this.future.get(), this.student.getStatus()));
+                if (this.trainFuture.isDone()) {
+                    this.testFuture = sendEvent(new TestModelEvent(this.trainFuture.get(), this.student.getStatus()));
                     this.state = WaitingForTestToFinish;
                 }
             } else if (this.state == WaitingForTestToFinish) {
                 if (this.testFuture.isDone()) {
+                    this.student.getModels().get(currentModelIndex).setModelStatus(this.testFuture.get());
                     if (this.testFuture.get() == ModelStatus.Good) {
-                        sendEvent(new PublishResultsEvent(this.future.get()));
+                        sendEvent(new PublishResultsEvent(this.trainFuture.get()));
                     }
                     this.currentModelIndex++;
                     if (currentModelIndex < this.student.getModels().size()) {
-                        this.future = this.sendEvent(new TrainModelEvent(this.student.getModels().get(this.currentModelIndex)));
+                        this.trainFuture = this.sendEvent(new TrainModelEvent(this.student.getModels().get(this.currentModelIndex)));
                         this.state = WaitingForTrainToFinish;
                     } else {
                         this.state = DoneTrainingModels;

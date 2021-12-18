@@ -1,10 +1,7 @@
 package bgu.spl.mics.application.objects;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -16,18 +13,38 @@ public class Student {
     private final String department;
     private final Degree status;
     private final ArrayList<Model> models;
-    private final AtomicInteger publications = new AtomicInteger(0);
-    private final AtomicInteger papersRead = new AtomicInteger(0);
+
+    public int getPublications() {
+        return publications;
+    }
+
+    public void setPublications(int publications) {
+        this.publications = publications;
+    }
+
+    public int getPapersRead() {
+        return papersRead;
+    }
+
+    public void setPapersRead(int papersRead) {
+        this.papersRead = papersRead;
+    }
+
+    private int publications;
+    private int papersRead;
 
     public Student(String name, String department, String status, ArrayList<Model> models) {
         this.name = name;
         this.department = department;
         this.status = searchEnum(Degree.class, status);
         this.models = models;
-        this.models.sort((o1, o2) -> o1.getSize() - o2.getSize());
+        this.models.sort(Comparator.comparingInt(Model::getSize));
+        this.publications = 0;
+        this.papersRead = 0;
 
 
     }
+
     public Student(String name, String department, Degree status, ArrayList<Model> models) {
         this.name = name;
         this.department = department;
@@ -53,11 +70,11 @@ public class Student {
     }
 
     public void incrementPublications(int amount) {
-        publications.set(publications.get() + amount);
+        publications = publications + amount;
     }
 
     public void incrementPapersRead(int amount) { //The amount excluding this student's publications will be calculated in service
-        papersRead.set(papersRead.get() + amount);
+        papersRead = papersRead + amount;
     }
 
     public Degree getStatus() {
