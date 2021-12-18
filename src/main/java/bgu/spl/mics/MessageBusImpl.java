@@ -119,8 +119,10 @@ public class MessageBusImpl implements MessageBus {
 
         } else {
             for (MicroService m : broadcastSubscribers.get(type)) {
-                messagesQueue.get(m).add(b);
-                m.notifyMicroService();
+                if(messagesQueue.get(m) != null) { //Avoiding getting to a null array that exists mid unregistration
+                    messagesQueue.get(m).add(b);
+                    m.notifyMicroService();
+                }
             }
         }
     }

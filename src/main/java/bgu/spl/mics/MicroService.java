@@ -1,6 +1,5 @@
 package bgu.spl.mics;
 import bgu.spl.mics.application.messages.broadcasts.TerminateBroadcast;
-import bgu.spl.mics.application.services.GPUService;
 
 import java.util.HashMap;
 import java.util.Set;
@@ -35,8 +34,6 @@ public abstract class MicroService implements Runnable {
 
     protected HashMap<Class<? extends Message>, Callback> messages_callbacks;
 
-
-    protected Event task; //Services that have their own tasks will use it via it's future.
 
 
     /**
@@ -186,7 +183,7 @@ public abstract class MicroService implements Runnable {
            //     if(!name.equals("time-service")) System.out.println(name);
 
             } catch (InterruptedException exp) {
-
+                logger.info(String.format("%s was interrupted", this.name));
             }
         }
         logger.info(String.format("%s is terminating", this.name));
