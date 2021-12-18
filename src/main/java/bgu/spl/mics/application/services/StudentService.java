@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.Future;
+import bgu.spl.mics.MessageBusImpl;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.broadcasts.PublishConferenceBroadcast;
 import bgu.spl.mics.application.messages.broadcasts.TickBroadcast;
@@ -16,7 +17,7 @@ import java.util.logging.Logger;
 import static bgu.spl.mics.application.services.State.*;
 
 enum State {
-    WaitingForTrainToFinish, WaitingForTestToFinish, DoneTrainingModels
+    Start, WaitingForTrainToFinish, WaitingForTestToFinish, DoneTrainingModels
 }
 
 /**
@@ -36,12 +37,15 @@ public class StudentService extends MicroService {
     private int currentModelIndex;
     public Future<Model> trainFuture;
     public Future<ModelStatus> testFuture;
+    private final int gpusCount;
 
 
-    public StudentService(Student student) {
+    public StudentService(Student student, int gpusCount) {
         super(student.getName()); //Service and object will share the same name
         this.student = student;
         currentModelIndex = 0;
+        this.state = Start;
+        this.gpusCount = gpusCount;
     }
 
     @Override
@@ -49,7 +53,17 @@ public class StudentService extends MicroService {
         logger.info(String.format("%s Student Service started ", this.name));
 
         this.subscribeBroadcast(TickBroadcast.class, tickBroadcastMessage -> {
-            if (this.state == WaitingForTrainToFinish) {
+            if (this.state == Start) {
+                if (!this.student.getModels().isEmpty()) {
+                    if (MessageBusImpl.getInstance().eventSubscribers.get(TrainModelEvent.class).size() == this.gpusCount){
+                        this.trainFuture = this.sendEvent(new TrainModelEvent(this.student.getModels().get(this.currentModelIndex)));
+                        this.state = WaitingForTrainToFinish;
+                    }
+                } else {
+                    this.state = DoneTrainingModels;
+                }
+            }
+            else if (this.state == WaitingForTrainToFinish) {
                 if (this.trainFuture.isDone()) {
                     this.testFuture = sendEvent(new TestModelEvent(this.trainFuture.get(), this.student.getStatus()));
                     this.state = WaitingForTestToFinish;
@@ -76,11 +90,5 @@ public class StudentService extends MicroService {
             student.incrementPapersRead(PublishConferenceBroadcastMessage.getPapersRead(student.getModels()));
         });
 
-        if (!this.student.getModels().isEmpty()) {
-            this.trainFuture = this.sendEvent(new TrainModelEvent(this.student.getModels().get(this.currentModelIndex)));
-            this.state = WaitingForTrainToFinish;
-        } else {
-            this.state = DoneTrainingModels;
-        }
     }
 }

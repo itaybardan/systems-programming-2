@@ -94,7 +94,7 @@ public class MainTest {
         }
 
         for (Student student : inputInfo.students) {
-            microServices.add(new StudentService(student));
+            microServices.add(new StudentService(student, 2));
         }
 
 //TODO DELETE

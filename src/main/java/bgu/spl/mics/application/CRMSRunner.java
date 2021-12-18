@@ -1,7 +1,5 @@
 package bgu.spl.mics.application;
 
-import bgu.spl.mics.Message;
-import bgu.spl.mics.MessageBusImpl;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.objects.*;
 import bgu.spl.mics.application.services.*;
@@ -72,10 +70,6 @@ public class CRMSRunner {
             microServices.add(new GPUService(String.valueOf(i), gpu));
         }
 
-        for (Student student : inputInfo.students) {
-            microServices.add(new StudentService(student));
-        }
-
         for (ConferenceInformation conferenceInformation : inputInfo.conferences) {
             microServices.add(new ConferenceService(conferenceInformation.getName(), conferenceInformation));
         }
@@ -85,6 +79,9 @@ public class CRMSRunner {
             microServices.add(new CPUService(String.valueOf(i), cpu));
         }
 
+        for (Student student : inputInfo.students) {
+            microServices.add(new StudentService(student, inputInfo.gpus.size()));
+        }
 
         TimeService timeService = new TimeService("time-service", inputInfo.tickTime, inputInfo.duration);
 
@@ -93,16 +90,8 @@ public class CRMSRunner {
 
     private static void initMicroServices(ArrayList<? extends MicroService> microServices, TimeService ts, int gpusSize) {
         ExecutorService executor = Executors.newFixedThreadPool(microServices.size() + 1);
-        for (int i = 0; i < microServices.size(); i++) {
-            MicroService ms = microServices.get(i);
+        for (MicroService ms : microServices) {
             executor.submit(ms);
-            if (i == gpusSize - 1) {
-                try {
-                    TimeUnit.MILLISECONDS.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
         }
         executor.submit(ts);
         executor.shutdown();
@@ -122,6 +111,7 @@ public class CRMSRunner {
 
         int ticks = rootObject.get("TickTime").getAsInt();
         int duration = rootObject.get("Duration").getAsInt();
+
         ArrayList<GPU> gpus = new ArrayList<>();
         for (JsonElement gpuInfo : rootObject.get("GPUS").getAsJsonArray()) {
             gpus.add(new GPU(gpuInfo.getAsString()));
