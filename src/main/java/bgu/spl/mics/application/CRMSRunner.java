@@ -27,10 +27,15 @@ import java.util.concurrent.TimeUnit;
 public class CRMSRunner {
 
     public static void main(String[] args) {
-        InputInfo inputInfo = parseJsonInputFile();
-        ImmutablePair<ArrayList<MicroService>, TimeService> microServicesPair = createMicroServices(inputInfo);
-        initMicroServices(microServicesPair.getLeft(), microServicesPair.getRight(), inputInfo.gpus.size());
-        writeOutputFile(inputInfo);
+        if (args.length == 1){
+            InputInfo inputInfo = parseJsonInputFile(args[0]);
+            ImmutablePair<ArrayList<MicroService>, TimeService> microServicesPair = createMicroServices(inputInfo);
+            initMicroServices(microServicesPair.getLeft(), microServicesPair.getRight(), inputInfo.gpus.size());
+            writeOutputFile(inputInfo);
+        }
+        else {
+            System.out.println("usage: <program_path> <input_file_path>");
+        }
     }
 
     public static class OutputInfo {
@@ -102,8 +107,13 @@ public class CRMSRunner {
         }
     }
 
-    private static InputInfo parseJsonInputFile() {
-        InputStream inputFileStream = CRMSRunner.class.getClassLoader().getResourceAsStream("example_input.json");
+    private static InputInfo parseJsonInputFile(String inputFilePath) {
+        InputStream inputFileStream = null;
+        try {
+            inputFileStream = new FileInputStream(inputFilePath);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
         assert inputFileStream != null;
         Reader reader = new InputStreamReader(inputFileStream);
         JsonElement rootElement = JsonParser.parseReader(reader);
