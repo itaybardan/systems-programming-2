@@ -13,5 +13,4 @@ public class GPUTest {
 
     public void tearDown() {
     }
-
 }

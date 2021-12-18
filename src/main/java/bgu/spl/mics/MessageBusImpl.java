@@ -148,9 +148,7 @@ public class MessageBusImpl implements MessageBus {
             ex.printStackTrace();
         }
         eventHandler.notifyMicroService();
-
         return future;
-
     }
 
     @Override
@@ -177,33 +175,30 @@ public class MessageBusImpl implements MessageBus {
             //Finally, remove the message queue of the microservice.
             messagesQueue.remove(m);
         }
+
     }
 
     @Override
     public Message awaitMessage(MicroService m) throws InterruptedException {
+
         if (!isRegistered(m)) throw new IllegalStateException(); // this microservice does not exist
-        synchronized (m) {
+
+        synchronized (m.lock) {
             while (messagesQueue.get(m).isEmpty()) {
                 // will be notified when it gets a message. no need to be in a while loop since only this method can remove from m's queue
-                m.wait();
+                m.lock.wait();
             }
             return messagesQueue.get(m).poll();
         }
     }
 
-    //Only for test
-    public boolean isEventProcessed(Event event) {
-        for (MicroService m : messagesQueue.keySet()) {
-            if (messagesQueue.get(m).contains(event)) return true;
-        }
-        return false;
+
+    public boolean isEventProcessed(Event event, MicroService m) { //Only for test
+        return messagesQueue.containsKey(m) && messagesQueue.get(m).contains(event);
     }
 
 
-    public boolean isBroadcastProcessed(Broadcast broadcast) { //Only for test
-        for (MicroService m : messagesQueue.keySet()) {
-            if (messagesQueue.get(m).contains(broadcast)) return true;
-        }
-        return false;
+    public boolean isBroadcastProcessed(Broadcast broadcast, MicroService m) { //Only for test
+        return messagesQueue.containsKey(m) && messagesQueue.get(m).contains(broadcast);
     }
 }

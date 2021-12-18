@@ -11,7 +11,7 @@ public class CPUTest {
 
     @Before
     public void setUp() {
-        this.cpu = new CPU(0);
+        this.cpu = new CPU(1);
     }
 
     @Test

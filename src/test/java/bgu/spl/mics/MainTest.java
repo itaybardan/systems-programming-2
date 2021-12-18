@@ -6,15 +6,19 @@ import bgu.spl.mics.application.objects.*;
 import bgu.spl.mics.application.services.ConferenceService;
 import bgu.spl.mics.application.services.StudentService;
 import bgu.spl.mics.application.services.TimeService;
-import org.junit.Before;
-import org.junit.Test;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 
 
@@ -67,89 +71,130 @@ class ExampleGPU extends MicroService{
     }
 }
 
+//Mainly copied from CSMRunner
 
 public class MainTest {
 
-    final int ticks=10;
-    final int duration=800;
-    StudentService studentService1, studentService2;
-    ConferenceService conferenceService1, conferenceService2;
-    ExampleGPU exampleGPU1, exampleGPU2, exampleGPU3;
-    TimeService timeService;
-    MessageBusImpl messageBus;
+    public static void main(String[] args) {
+        InputInfo inputInfo = parseJsonInputFile();
+        ImmutablePair<ArrayList<MicroService>, TimeService> microServicesPair = createMicroServices(inputInfo);
+        initMicroServices(microServicesPair.getLeft(), microServicesPair.getRight());
 
 
-    @Before
-    public void beforeTest(){
+        //TODO add json write output here.
 
-        ArrayList<Model> models = new ArrayList<Model>();
-        Model m1 = new Model("test1", ModelType.images, 10000);
-        Model m2 = new Model("test2", ModelType.tabular, 20000);
-        Model m3 = new Model("test3", ModelType.text, 30000);
-        models.add(m1);
-        models.add(m2);
-        models.add(m3);
-
-
-        Student student1 = new Student("stud1", "dep", Student.Degree.MSc, models);
-        ConferenceInformation conf1 = new ConferenceInformation("conf1", 250);
-        ConferenceInformation conf2 = new ConferenceInformation("conf2", 450);
-
-        exampleGPU1 = new ExampleGPU("gpu1");
-        exampleGPU2 = new ExampleGPU("gpu2");
-        exampleGPU3 = new ExampleGPU("gpu3");
-
-        studentService1 = new StudentService(student1);
-        studentService2 = new StudentService(student1);
-
-        conferenceService1 = new ConferenceService("conf1", conf1);
-
-        conferenceService2 = new ConferenceService("conf2", conf2);
-
-
-        messageBus = MessageBusImpl.getInstance();
     }
 
-    @Test
-    public void runTest() {
+    private static ImmutablePair<ArrayList<MicroService>, TimeService> createMicroServices(InputInfo inputInfo) {
+        ArrayList<MicroService> microServices = new ArrayList<>();
 
-        ExecutorService fixedPool = Executors.newFixedThreadPool(8);
-        timeService = new TimeService("time",ticks, duration);
-        fixedPool.execute(timeService);
-        fixedPool.execute(exampleGPU1);
-        fixedPool.execute(exampleGPU2);
-        fixedPool.execute(exampleGPU3);
-        fixedPool.execute(conferenceService1);
-        fixedPool.execute(conferenceService2);
 
-        Thread thread = new Thread ( () -> { //There needs to be some sort of delay between setting up gpus and students.
-            try {
-                Thread.sleep(5);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        });
-
-        thread.start();
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        for (ConferenceInformation conferenceInformation : inputInfo.conferences) {
+            microServices.add(new ConferenceService(conferenceInformation.getName(), conferenceInformation));
         }
-        fixedPool.execute(studentService1);
-        fixedPool.execute(studentService2);
+
+        for (Student student : inputInfo.students) {
+            microServices.add(new StudentService(student));
+        }
+
+//TODO DELETE
+        ExampleGPU gpu1 = new ExampleGPU("gpu1");
+        ExampleGPU gpu2 = new ExampleGPU("gpu2");
+
+        microServices.add(gpu1);
+        microServices.add(gpu2);
+//TODO:READD
+
+//        for (int i = 0; i < inputInfo.cpus.size(); i++) {
+//            CPU cpu = inputInfo.cpus.get(i);
+//            microServices.add(new CPUService(String.valueOf(i), cpu));
+//        }
+//
+//        for (int i = 0; i < inputInfo.gpus.size(); i++) {
+//            GPU gpu = inputInfo.gpus.get(i);
+//            microServices.add(new GPUService(String.valueOf(i), gpu));
+//        }
 
 
+
+        System.out.println(inputInfo.tickTime + " " + inputInfo.duration);
+        TimeService timeService = new TimeService("time-service", inputInfo.tickTime, inputInfo.duration);
+
+        return new ImmutablePair<>(microServices, timeService);
+    }
+
+    private static void initMicroServices(ArrayList<? extends MicroService> microServices, TimeService ts) {
+        ExecutorService fixedPool = Executors.newFixedThreadPool(microServices.size()+1);
+
+        fixedPool.execute(ts);
+        for (MicroService m : microServices){
+            fixedPool.execute(m);
+        }
 
         fixedPool.shutdown();
-        try {
-            fixedPool.awaitTermination(2800, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
 
     }
 
+    private static InputInfo parseJsonInputFile() {
+        InputStream inputFileStream = MainTest.class.getClassLoader().getResourceAsStream("example_input.json");
+        assert inputFileStream != null;
+        Reader reader = new InputStreamReader(inputFileStream);
+        JsonElement rootElement = JsonParser.parseReader(reader);
+        JsonObject rootObject = rootElement.getAsJsonObject();
 
+        int ticks = rootObject.get("TickTime").getAsInt();
+        int duration = rootObject.get("Duration").getAsInt();
+        ArrayList<GPU> gpus = new ArrayList<>();
+        for (JsonElement gpuInfo : rootObject.get("GPUS").getAsJsonArray()) {
+            gpus.add(new GPU(gpuInfo.getAsString()));
+        }
+
+        ArrayList<CPU> cpus = new ArrayList<>();
+        for (JsonElement cpuInfo : rootObject.get("CPUS").getAsJsonArray()) {
+            cpus.add(new CPU(cpuInfo.getAsInt()));
+        }
+
+        ArrayList<ConferenceInformation> conferences = new ArrayList<>();
+        for (JsonElement conferenceInfo : rootObject.get("Conferences").getAsJsonArray()) {
+            JsonObject conferenceInfoObject = conferenceInfo.getAsJsonObject();
+            conferences.add(new ConferenceInformation(conferenceInfoObject.get("name").getAsString(),
+                    conferenceInfoObject.get("date").getAsInt()));
+        }
+
+        ArrayList<Student> students = new ArrayList<>();
+
+        for (JsonElement studentInfo : rootObject.get("Students").getAsJsonArray()) {
+            JsonObject studentInfoObject = studentInfo.getAsJsonObject();
+            ArrayList<Model> models = new ArrayList<>();
+            for (JsonElement modelInfo : studentInfoObject.get("models").getAsJsonArray()) {
+                JsonObject modelInfoObject = modelInfo.getAsJsonObject();
+                models.add(new Model(modelInfoObject.get("name").getAsString(),
+                        modelInfoObject.get("type").getAsString(), modelInfoObject.get("size").getAsInt()));
+            }
+            students.add(new Student(studentInfoObject.get("name").getAsString(), studentInfoObject.get("department").getAsString(),
+                    studentInfoObject.get("status").getAsString(), models));
+
+        }
+
+
+        return new MainTest.InputInfo(students, conferences, duration, ticks, gpus, cpus);
+    }
+
+    private static class InputInfo {
+        private final ArrayList<Student> students;
+        private final ArrayList<ConferenceInformation> conferences;
+        private final int duration;
+        private final int tickTime;
+        private final ArrayList<GPU> gpus;
+        private final ArrayList<CPU> cpus;
+
+        public InputInfo(ArrayList<Student> students, ArrayList<ConferenceInformation> conferences, int duration, int tickTime, ArrayList<GPU> gpus, ArrayList<CPU> cpus) {
+            this.students = students;
+            this.conferences = conferences;
+            this.duration = duration;
+            this.tickTime = tickTime;
+            this.cpus = cpus;
+            this.gpus = gpus;
+        }
+    }
 }
