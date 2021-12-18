@@ -3,34 +3,64 @@ package bgu.spl.mics.application;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.objects.*;
 import bgu.spl.mics.application.services.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This is the Main class of Compute Resources Management System application. You should parse the input file,
  * create the different instances of the objects, and run the system.
  * In the end, you should output a text file.
  */
-
-
-
 public class CRMSRunner {
 
     public static void main(String[] args) {
         InputInfo inputInfo = parseJsonInputFile();
         ImmutablePair<ArrayList<MicroService>, TimeService> microServicesPair = createMicroServices(inputInfo);
         initMicroServices(microServicesPair.getLeft(), microServicesPair.getRight());
+        writeOutputFile(inputInfo);
     }
 
+    public static class OutputInfo {
+        public CopyOnWriteArrayList<String> trainedModelsNames;
+        public int processedDataBatches;
+        public int cpuTimeUsed;
+        public int gpuTimeUsed;
+        public ArrayList<Student> students;
+        public ArrayList<ConferenceInformation> conferences;
+
+        public OutputInfo(InputInfo inputInfo) {
+            this.trainedModelsNames = Cluster.getInstance().statistics.trainedModelsNames;
+            this.processedDataBatches = Cluster.getInstance().statistics.processedDataBatches.get();
+            this.cpuTimeUsed = Cluster.getInstance().statistics.cpuTimeUsed.get();
+            this.gpuTimeUsed = Cluster.getInstance().statistics.gpuTimeUsed.get();
+            this.students = inputInfo.students;
+            this.conferences = inputInfo.conferences;
+        }
+    }
+
+    private static void writeOutputFile(InputInfo inputInfo) {
+        OutputInfo outputInfo = new OutputInfo(inputInfo);
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        try {
+            String json = ow.writeValueAsString(outputInfo);
+            FileUtils.writeStringToFile(new File("output/output.json"), json, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     private static ImmutablePair<ArrayList<MicroService>, TimeService> createMicroServices(InputInfo inputInfo) {
         ArrayList<MicroService> microServices = new ArrayList<>();
@@ -52,19 +82,23 @@ public class CRMSRunner {
             microServices.add(new GPUService(String.valueOf(i), gpu));
         }
 
-        TimeService timeService = new TimeService("time-service", inputInfo.duration, inputInfo.tickTime);
+        TimeService timeService = new TimeService("time-service", inputInfo.tickTime, inputInfo.duration);
 
         return new ImmutablePair<>(microServices, timeService);
     }
 
     private static void initMicroServices(ArrayList<? extends MicroService> microServices, TimeService ts) {
-        ExecutorService fixedPool = Executors.newFixedThreadPool(microServices.size()+1);
-        fixedPool.execute(ts);
-        for (MicroService m : microServices){
-            fixedPool.execute(m);
+        ExecutorService executor = Executors.newFixedThreadPool(microServices.size() + 1);
+        for (MicroService ms : microServices) {
+            executor.submit(ms);
         }
-        fixedPool.shutdown();
-
+        executor.submit(ts);
+        executor.shutdown();
+        try {
+            boolean result = executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private static InputInfo parseJsonInputFile() {
@@ -94,8 +128,6 @@ public class CRMSRunner {
         }
 
         ArrayList<Student> students = new ArrayList<>();
-
-
         for (JsonElement studentInfo : rootObject.get("Students").getAsJsonArray()) {
             JsonObject studentInfoObject = studentInfo.getAsJsonObject();
             ArrayList<Model> models = new ArrayList<>();
@@ -108,7 +140,6 @@ public class CRMSRunner {
                     studentInfoObject.get("status").getAsString(), models));
 
         }
-
 
         return new CRMSRunner.InputInfo(students, conferences, duration, ticks, gpus, cpus);
     }

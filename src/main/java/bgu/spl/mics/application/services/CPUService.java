@@ -22,7 +22,7 @@ public class CPUService extends MicroService {
 
     @Override
     protected void initialize() {
-        logger.info(String.format("%s CPU Service has started ", this.name));
+        logger.info(String.format("%s CPU Service started ", this.name));
 
         this.subscribeBroadcast(TickBroadcast.class, tickBroadcastMessage -> {
             cpu.increaseTicks();
@@ -30,7 +30,6 @@ public class CPUService extends MicroService {
                 if (cpu.ticks - cpu.startProcessTick == Data.getTickTime(cpu.dataBatch.type) * (32 / this.cpu.cores)) {
                     cpu.sendReadyDataBatch();
                     cpu.finishProcessing();
-                    cpu.getNewDataBatch();
                 }
             } else {
                 boolean succeed = cpu.getNewDataBatch();

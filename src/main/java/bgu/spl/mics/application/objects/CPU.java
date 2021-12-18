@@ -1,8 +1,6 @@
 package bgu.spl.mics.application.objects;
 
 
-import bgu.spl.mics.application.services.TimeService;
-
 import java.util.logging.Logger;
 
 /**
@@ -36,28 +34,9 @@ public class CPU {
      * @post @pre(tickTime) - @post(tickTime) == (32 / getCores()) * @pre(result).tickTime
      */
     public void startProcessDataBatch() {
-        if (!this.cluster.unprocessedDataBatches.isEmpty()) {
-            this.isProcessing = true;
-            this.dataBatch = this.cluster.unprocessedDataBatches.remove(0);
-            this.startProcessTick = this.ticks;
-            logger.info(String.format("CPU start process data batch: %d", this.dataBatch.startIndex));
-
-        }
-    }
-
-    public void increaseTicks() {
-        this.ticks += 1;
-    }
-
-    public boolean getNewDataBatch() {
-
-        synchronized (this.cluster.unprocessedDataBatchesLock) {
-            if (!this.cluster.unprocessedDataBatches.isEmpty()) {
-                this.dataBatch = this.cluster.unprocessedDataBatches.remove(0);
-                return true;
-            }
-        }
-        return false;
+        this.isProcessing = true;
+        this.startProcessTick = this.ticks;
+        //logger.info(String.format("CPU start process data batch: %d", this.dataBatch.startIndex));
     }
 
     public void finishProcessing() {
@@ -67,13 +46,24 @@ public class CPU {
         this.dataBatch = null;
     }
 
-    public void sendReadyDataBatch() {
-        synchronized (this.cluster.gpuToProcessedDataBatches.get(this.cluster.dataBatchToGpu.get(this.dataBatch))) {
-            this.cluster.gpuToProcessedDataBatches.get(this.cluster.dataBatchToGpu.get(this.dataBatch)).add(dataBatch);
-            this.cluster.statistics.processedDataBatches.getAndIncrement();
-            this.cluster.gpuToProcessedDataBatches.get(this.cluster.dataBatchToGpu.get(this.dataBatch)).notify();
-            this.cluster.dataBatchToGpu.remove(this.dataBatch);
+    public void increaseTicks() {
+        this.ticks += 1;
+    }
+
+    public boolean getNewDataBatch() {
+        synchronized (this.cluster.unprocessedDataBatchesLock) {
+            if (!this.cluster.unprocessedDataBatches.isEmpty()) {
+                this.dataBatch = this.cluster.unprocessedDataBatches.remove(0);
+                return true;
+            }
         }
+        return false;
+    }
+
+    public void sendReadyDataBatch() {
+        this.cluster.gpuToProcessedDataBatches.get(this.cluster.dataBatchToGpu.get(this.dataBatch)).add(dataBatch);
+        this.cluster.statistics.processedDataBatches.getAndIncrement();
+        this.cluster.dataBatchToGpu.remove(this.dataBatch);
     }
 }
 

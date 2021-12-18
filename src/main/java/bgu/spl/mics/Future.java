@@ -32,7 +32,6 @@ public class Future<T> {
      * @return return the result of type T if it is available, if not wait until it is available.
      */
     public synchronized T get() {
-
         while (result == null) {
             try {
                 wait(); //Will wait indefinitely until either notify() is called. will also release monitor key in the meantime

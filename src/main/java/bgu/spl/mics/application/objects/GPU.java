@@ -4,7 +4,6 @@ import bgu.spl.mics.application.messages.events.TrainModelEvent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Logger;
@@ -30,7 +29,6 @@ public class GPU {
     public int ticks;
     public Type type;
     private final Cluster cluster = Cluster.getInstance();
-    public LinkedList<DataBatch> processedData;
     public boolean isTrainingModel = false;
     public boolean isTrainingDataBatch = false;
     public int startTrainingTick;
@@ -46,22 +44,6 @@ public class GPU {
         this.type = Type.valueOf(type);
     }
 
-
-    /**
-     * @post getAvailableProcessedDataSpace() == 0
-     */
-    public void sendDataBatchToCluster(DataBatch dataBatch) {
-
-    }
-
-    public int getAvailableProcessedDataSpace() {
-        return GPU.typeToProcessedDataCapacity.get(this.type) - this.processedData.size();
-    }
-
-    public LinkedList<DataBatch> getProcessedData() {
-        return this.processedData;
-    }
-
     public void increaseTicks() {
         this.ticks++;
     }
@@ -69,8 +51,7 @@ public class GPU {
     public void startTrainingModel(TrainModelEvent event) {
         logger.info(String.format("GPU with type %s is starting training model: %s",
                 this.type.toString(), event.model.getName()));
-        this.processedData = new LinkedList<>();
-        this.availableSpots = GPU.typeToProcessedDataCapacity.get(this.type) - this.processedData.size();
+        this.availableSpots = GPU.typeToProcessedDataCapacity.get(this.type);
         this.isTrainingModel = true;
         this.trainedDataBatches = 0;
         this.event = event;
@@ -90,32 +71,28 @@ public class GPU {
     }
 
     public void finishTrainingDataBatch() {
-        logger.info(String.format("GPU with type %s finished training data batch", this.type.toString()));
+        //logger.info(String.format("GPU with type %s finished training data batch", this.type.toString()));
         this.cluster.statistics.gpuTimeUsed.getAndAdd(this.ticks - this.startTrainingTick);
         this.isTrainingDataBatch = false;
         this.trainedDataBatches++;
-        if (!this.dataBatches.isEmpty()){
+        this.availableSpots++;
+        if (!this.dataBatches.isEmpty()) {
             DataBatch dataBatchToSend = this.dataBatches.remove(0);
             this.cluster.dataBatchToGpu.put(dataBatchToSend, this);
-            this.sendDataBatchToCluster(dataBatchToSend);
+            this.cluster.unprocessedDataBatches.add(dataBatchToSend);
         }
     }
 
     public void startTrainingDataBatch() {
-        logger.info(String.format("GPU with type %s starting to train data batch", this.type.toString()));
-        while (this.cluster.gpuToProcessedDataBatches.get(this).isEmpty()) {
-            synchronized (this.cluster.gpuToProcessedDataBatches.get(this)) {
-                try {
-                    this.cluster.gpuToProcessedDataBatches.get(this).wait();
-                    this.processedData.add(this.cluster.gpuToProcessedDataBatches.get(this).remove(0));
-                    this.startTrainingTick = this.ticks;
-                    this.isTrainingDataBatch = true;
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+        if (!this.cluster.gpuToProcessedDataBatches.get(this).isEmpty()) {
+            this.cluster.gpuToProcessedDataBatches.get(this).remove(0);
+            //logger.info(String.format("GPU with type %s starting to train data batch %d", this.type.toString(),
+            //          dataBatchToTrain.startIndex));
+            this.startTrainingTick = this.ticks;
+            this.isTrainingDataBatch = true;
         }
     }
+
 
     public void finishTrainingModel() {
         logger.info(String.format("GPU with type %s finished training model: %s", this.type.toString(),
