@@ -3,15 +3,23 @@ package bgu.spl.mics.application;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.objects.*;
 import bgu.spl.mics.application.services.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 /**
  * This is the Main class of Compute Resources Management System application. You should parse the input file,
@@ -24,6 +32,17 @@ public class CRMSRunner {
         InputInfo inputInfo = parseJsonInputFile();
         ImmutablePair<ArrayList<MicroService>, TimeService> microServicesPair = createMicroServices(inputInfo);
         initMicroServices(microServicesPair.getLeft(), microServicesPair.getRight());
+        writeOutputFile(Cluster.getInstance());
+    }
+
+    private static void writeOutputFile(Cluster instance) {
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        try {
+            String json = ow.writeValueAsString(instance.statistics);
+            FileUtils.writeStringToFile(new File("output/output.json"), json, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private static ImmutablePair<ArrayList<MicroService>, TimeService> createMicroServices(InputInfo inputInfo) {
@@ -46,40 +65,22 @@ public class CRMSRunner {
             microServices.add(new GPUService(String.valueOf(i), gpu));
         }
 
-        TimeService timeService = new TimeService("time-service", inputInfo.duration, inputInfo.tickTime);
+        TimeService timeService = new TimeService("time-service", inputInfo.tickTime, inputInfo.duration);
 
         return new ImmutablePair<>(microServices, timeService);
     }
 
     private static void initMicroServices(ArrayList<? extends MicroService> microServices, TimeService ts) {
-        // create threads out of every ms
-        ArrayList<Thread> threads = new ArrayList<>();
+        ExecutorService executor = Executors.newFixedThreadPool(microServices.size() + 1);
         for (MicroService ms : microServices) {
-            threads.add(new Thread(ms));
+            executor.submit(ms);
         }
-
-        // start the threads
-        Thread timeServiceThread = new Thread(ts);
-        for (Thread thread : threads) {
-            thread.start();
-        }
-        timeServiceThread.start();
-
-
-        // wait for time service to finish
+        executor.submit(ts);
+        executor.shutdown();
         try {
-            timeServiceThread.join();
+            boolean result = executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }
-
-        // wait for the ms threads to finish
-        for (Thread thread : threads) {
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
         }
     }
 

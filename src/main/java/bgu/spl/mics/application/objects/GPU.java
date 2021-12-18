@@ -83,7 +83,9 @@ public class GPU {
         while (this.availableSpots > 0 && !dataBatches.isEmpty()) {
             DataBatch dataBatchToSend = dataBatches.remove(0);
             this.cluster.dataBatchToGpu.put(dataBatchToSend, this);
-            this.cluster.unprocessedDataBatches.add(dataBatchToSend);
+            synchronized (this.cluster.unprocessedDataBatchesLock) {
+                this.cluster.unprocessedDataBatches.add(dataBatchToSend);
+            }
             this.cluster.gpuToProcessedDataBatches.putIfAbsent(this, new CopyOnWriteArrayList<>());
             this.availableSpots--;
         }
@@ -94,28 +96,26 @@ public class GPU {
         this.cluster.statistics.gpuTimeUsed.getAndAdd(this.ticks - this.startTrainingTick);
         this.isTrainingDataBatch = false;
         this.trainedDataBatches++;
-        if (!this.dataBatches.isEmpty()){
+        if (!this.dataBatches.isEmpty()) {
             DataBatch dataBatchToSend = this.dataBatches.remove(0);
             this.cluster.dataBatchToGpu.put(dataBatchToSend, this);
-            this.sendDataBatchToCluster(dataBatchToSend);
+            synchronized (this.cluster.unprocessedDataBatchesLock) {
+                this.cluster.unprocessedDataBatches.add(dataBatchToSend);
+            }
         }
     }
 
     public void startTrainingDataBatch() {
-        logger.info(String.format("GPU with type %s starting to train data batch", this.type.toString()));
-        while (this.cluster.gpuToProcessedDataBatches.get(this).isEmpty()) {
-            synchronized (this.cluster.gpuToProcessedDataBatches.get(this)) {
-                try {
-                    this.cluster.gpuToProcessedDataBatches.get(this).wait();
-                    this.processedData.add(this.cluster.gpuToProcessedDataBatches.get(this).remove(0));
-                    this.startTrainingTick = this.ticks;
-                    this.isTrainingDataBatch = true;
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+        if (!this.cluster.gpuToProcessedDataBatches.get(this).isEmpty()) {
+            DataBatch dataBatchToTrain = this.cluster.gpuToProcessedDataBatches.get(this).remove(0);
+            logger.info(String.format("GPU with type %s starting to train data batch %d", this.type.toString(),
+                    dataBatchToTrain.startIndex));
+            this.processedData.add(dataBatchToTrain);
+            this.startTrainingTick = this.ticks;
+            this.isTrainingDataBatch = true;
         }
     }
+
 
     public void finishTrainingModel() {
         logger.info(String.format("GPU with type %s finished training model: %s", this.type.toString(),
@@ -124,5 +124,5 @@ public class GPU {
         this.cluster.statistics.trainedModelsNames.add(this.event.model.getName());
     }
 
-    enum Type {RTX3090, RTX2080, GTX1080}
+enum Type {RTX3090, RTX2080, GTX1080}
 }

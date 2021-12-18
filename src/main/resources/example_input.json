@@ -3,7 +3,7 @@
     [
         {
             "name": "Simba",
-            "department": "Computer Science",            
+            "department": "Computer Science",
             "status": "MSc",
             "models":
             [
@@ -32,21 +32,21 @@
         },
         {
             "name": "Zazu",
-            "department": "EE",            
+            "department": "EE",
             "status": "PhD",
             "models":
             [
                 {
                     "name": "VIT",
                     "type": "images",
-                    "size": 1000
+                    "size": 100000000
                 }
             ]
 
         },
         {
             "name": "Pumba",
-            "department": "Computer Science",            
+            "department": "Computer Science",
             "status": "PhD",
             "models":
             [
@@ -75,7 +75,7 @@
         },
         {
             "name": "Timon",
-            "department": "SE",            
+            "department": "SE",
             "status": "MsC",
             "models":
             [
@@ -104,7 +104,7 @@
         },
         {
             "name": "Nala",
-            "department": "Computer Science",            
+            "department": "Computer Science",
             "status": "PhD",
             "models":
             [
