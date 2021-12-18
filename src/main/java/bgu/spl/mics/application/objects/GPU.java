@@ -42,7 +42,10 @@ public class GPU {
      */
     public GPU(String type) {
         this.type = Type.valueOf(type);
+        this.trainedDataBatches = 0;
     }
+
+    enum Type {RTX3090, RTX2080, GTX1080}
 
     public void increaseTicks() {
         this.ticks++;
@@ -70,8 +73,22 @@ public class GPU {
         }
     }
 
+    public void finishTrainingModel() {
+        logger.info(String.format("GPU with type %s finished training model: %s", this.type.toString(),
+                this.event.model.getName()));
+        this.isTrainingModel = false;
+        this.cluster.statistics.trainedModelsNames.add(this.event.model.getName());
+    }
+
+    public void startTrainingDataBatch() {
+        if (!this.cluster.gpuToProcessedDataBatches.get(this).isEmpty()) {
+            this.cluster.gpuToProcessedDataBatches.get(this).remove(0);
+            this.startTrainingTick = this.ticks;
+            this.isTrainingDataBatch = true;
+        }
+    }
+
     public void finishTrainingDataBatch() {
-        //logger.info(String.format("GPU with type %s finished training data batch", this.type.toString()));
         this.cluster.statistics.gpuTimeUsed.getAndAdd(this.ticks - this.startTrainingTick);
         this.isTrainingDataBatch = false;
         this.trainedDataBatches++;
@@ -83,23 +100,4 @@ public class GPU {
         }
     }
 
-    public void startTrainingDataBatch() {
-        if (!this.cluster.gpuToProcessedDataBatches.get(this).isEmpty()) {
-            this.cluster.gpuToProcessedDataBatches.get(this).remove(0);
-            //logger.info(String.format("GPU with type %s starting to train data batch %d", this.type.toString(),
-            //          dataBatchToTrain.startIndex));
-            this.startTrainingTick = this.ticks;
-            this.isTrainingDataBatch = true;
-        }
-    }
-
-
-    public void finishTrainingModel() {
-        logger.info(String.format("GPU with type %s finished training model: %s", this.type.toString(),
-                this.event.model.getName()));
-        this.isTrainingModel = false;
-        this.cluster.statistics.trainedModelsNames.add(this.event.model.getName());
-    }
-
-    enum Type {RTX3090, RTX2080, GTX1080}
 }

@@ -26,6 +26,10 @@ public class CPU {
         this.cores = cores;
     }
 
+    public void increaseTicks() {
+        this.ticks += 1;
+    }
+
     /**
      * pop batch data from
      *
@@ -36,7 +40,6 @@ public class CPU {
     public void startProcessDataBatch() {
         this.isProcessing = true;
         this.startProcessTick = this.ticks;
-        //logger.info(String.format("CPU start process data batch: %d", this.dataBatch.startIndex));
     }
 
     public void finishProcessing() {
@@ -44,10 +47,6 @@ public class CPU {
         this.cluster.statistics.cpuTimeUsed.getAndAdd(this.ticks - this.startProcessTick);
         this.startProcessTick = -1;
         this.dataBatch = null;
-    }
-
-    public void increaseTicks() {
-        this.ticks += 1;
     }
 
     public boolean getNewDataBatch() {

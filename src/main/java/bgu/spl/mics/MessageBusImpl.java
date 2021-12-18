@@ -7,6 +7,8 @@ import bgu.spl.mics.application.messages.broadcasts.TickBroadcast;
 import bgu.spl.mics.application.messages.events.PublishResultsEvent;
 import bgu.spl.mics.application.messages.events.TestModelEvent;
 import bgu.spl.mics.application.messages.events.TrainModelEvent;
+import bgu.spl.mics.application.services.GPUService;
+import bgu.spl.mics.application.services.StudentService;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -26,6 +28,8 @@ public class MessageBusImpl implements MessageBus {
     private final ConcurrentHashMap<Class<? extends Broadcast>, CopyOnWriteArrayList<MicroService>> broadcastSubscribers;
     private final ConcurrentHashMap<Message, Future> messageToFuture;
     private final ConcurrentHashMap<MicroService, LinkedBlockingQueue<Message>> messagesQueue;
+    private final Object studentInitLock = new Object();
+    private volatile int gpuServices;
 
     private static class MessageBusHolder {
         private static final MessageBusImpl messageBusInstance = new MessageBusImpl();
@@ -175,7 +179,6 @@ public class MessageBusImpl implements MessageBus {
             //Finally, remove the message queue of the microservice.
             messagesQueue.remove(m);
         }
-
     }
 
     @Override
