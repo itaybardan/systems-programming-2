@@ -52,7 +52,7 @@ public class CPU {
     public boolean getNewDataBatch() {
         synchronized (this.cluster.unprocessedDataBatchesLock) {
             if (!this.cluster.unprocessedDataBatches.isEmpty()) {
-                this.dataBatch = this.cluster.unprocessedDataBatches.remove(0);
+                this.dataBatch = this.cluster.unprocessedDataBatches.poll();
                 return true;
             }
         }

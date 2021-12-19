@@ -1,9 +1,9 @@
 package bgu.spl.mics.application.objects;
 
 
-import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -30,12 +30,12 @@ public class Cluster {
 
     public Statistics statistics;
     public ConcurrentHashMap<DataBatch, GPU> dataBatchToGpu;
-    public CopyOnWriteArrayList<DataBatch> unprocessedDataBatches;
+    public PriorityBlockingQueue<DataBatch> unprocessedDataBatches;
     public ConcurrentHashMap<GPU, CopyOnWriteArrayList<DataBatch>> gpuToProcessedDataBatches;
     public final Object unprocessedDataBatchesLock = new Object();
 
     public Cluster() {
-        this.unprocessedDataBatches = new CopyOnWriteArrayList<>();
+        this.unprocessedDataBatches = new PriorityBlockingQueue<>();
         this.dataBatchToGpu = new ConcurrentHashMap<>();
         this.gpuToProcessedDataBatches = new ConcurrentHashMap<>();
         this.statistics = new Statistics(new CopyOnWriteArrayList<>(), new AtomicInteger(0),

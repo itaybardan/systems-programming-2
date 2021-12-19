@@ -54,6 +54,9 @@
                 <version>1.2.1</version>
                 <configuration>
                     <mainClass>bgu.spl.mics.application.CRMSRunner</mainClass>
+                    <arguments>
+                        <argument>src/main/resources/example_input.json</argument>
+                    </arguments>
                 </configuration>
             </plugin>
             <plugin>

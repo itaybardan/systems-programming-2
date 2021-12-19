@@ -23,7 +23,7 @@ public class CPUTest {
 
     @Test
     public void startProcessDataBatch() {
-        this.cpu.dataBatch = new DataBatch(0, Data.DataType.text);
+        this.cpu.dataBatch = new DataBatch(0, Data.DataType.text, 1000);
         this.cpu.startProcessDataBatch();
         this.cpu.startProcessDataBatch();
         assertTrue(this.cpu.isProcessing);
@@ -32,7 +32,7 @@ public class CPUTest {
 
     @Test
     public void finishProcessing() {
-        this.cpu.dataBatch = new DataBatch(0, Data.DataType.images);
+        this.cpu.dataBatch = new DataBatch(0, Data.DataType.images, 1000);
         this.cpu.startProcessDataBatch();
         int cpuTimeUsedBeforeFinish = Cluster.getInstance().statistics.cpuTimeUsed.get();
         int startProcessTick = this.cpu.startProcessTick;
@@ -54,7 +54,7 @@ public class CPUTest {
 
     @Test
     public void sendReadyDataBatch() {
-        this.cpu.dataBatch = new DataBatch(0, Data.DataType.images);
+        this.cpu.dataBatch = new DataBatch(0, Data.DataType.images, 1000);
         GPU gpu1 = new GPU("GTX1080");
         Cluster.getInstance().dataBatchToGpu.put(this.cpu.dataBatch, gpu1);
         Cluster.getInstance().gpuToProcessedDataBatches.put(gpu1, new CopyOnWriteArrayList<>());

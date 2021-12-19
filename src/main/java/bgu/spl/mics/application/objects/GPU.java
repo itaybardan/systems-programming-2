@@ -61,7 +61,7 @@ public class GPU {
         Data data = new Data(Data.DataType.valueOf(event.model.getType().toString()), event.model.getSize());
         this.dataBatches = new ArrayList<>();
         for (int i = 0; i < data.getSize(); i += 1000) {
-            dataBatches.add(new DataBatch(i, data.type));
+            dataBatches.add(new DataBatch(i, data.type, data.size));
         }
 
         while (this.availableSpots > 0 && !dataBatches.isEmpty()) {
