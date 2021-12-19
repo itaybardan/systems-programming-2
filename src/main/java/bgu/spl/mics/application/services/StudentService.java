@@ -55,7 +55,8 @@ public class StudentService extends MicroService {
         this.subscribeBroadcast(TickBroadcast.class, tickBroadcastMessage -> {
             if (this.state == Start) {
                 if (!this.student.getModels().isEmpty()) {
-                    if (MessageBusImpl.getInstance().eventSubscribers.get(TrainModelEvent.class).size() == this.gpusCount){
+                    System.out.println(messageBus.ammOfSubs(TestModelEvent.class) + " " + this.gpusCount);
+                    if (messageBus.ammOfSubs(TrainModelEvent.class) == this.gpusCount){
                         this.trainFuture = this.sendEvent(new TrainModelEvent(this.student.getModels().get(this.currentModelIndex)));
                         this.state = WaitingForTrainToFinish;
                     }

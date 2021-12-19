@@ -24,12 +24,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 
 public class MessageBusImpl implements MessageBus {
-    public final ConcurrentHashMap<Class<? extends Event>, LinkedBlockingQueue<MicroService>> eventSubscribers;
+    private final ConcurrentHashMap<Class<? extends Event>, LinkedBlockingQueue<MicroService>> eventSubscribers;
     private final ConcurrentHashMap<Class<? extends Broadcast>, CopyOnWriteArrayList<MicroService>> broadcastSubscribers;
     private final ConcurrentHashMap<Message, Future> messageToFuture;
     private final ConcurrentHashMap<MicroService, LinkedBlockingQueue<Message>> messagesQueue;
-    private final Object studentInitLock = new Object();
-    private volatile int gpuServices;
 
     private static class MessageBusHolder {
         private static final MessageBusImpl messageBusInstance = new MessageBusImpl();
@@ -58,6 +56,14 @@ public class MessageBusImpl implements MessageBus {
 
     public static MessageBusImpl getInstance() {
         return MessageBusHolder.messageBusInstance;
+    }
+
+
+    public int ammOfSubs(Class<? extends Event> type){ //Used by StudentService
+        if(!eventSubscribers.containsKey(type)){
+            return 0;
+        }
+        return eventSubscribers.get(type).size();
     }
 
     public boolean isEventSubsEmpty(Class<? extends Event> type) {

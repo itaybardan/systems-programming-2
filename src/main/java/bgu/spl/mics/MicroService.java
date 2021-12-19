@@ -180,7 +180,6 @@ public abstract class MicroService implements Runnable {
             try {
                 message = messageBus.awaitMessage(this);
                 messages_callbacks.get(message.getClass()).call(message);
-           //     if(!name.equals("time-service")) System.out.println(name);
 
             } catch (InterruptedException exp) {
                 logger.info(String.format("%s was interrupted", this.name));

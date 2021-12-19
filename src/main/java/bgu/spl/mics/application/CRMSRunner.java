@@ -30,7 +30,7 @@ public class CRMSRunner {
         if (args.length == 1){
             InputInfo inputInfo = parseJsonInputFile(args[0]);
             ImmutablePair<ArrayList<MicroService>, TimeService> microServicesPair = createMicroServices(inputInfo);
-            initMicroServices(microServicesPair.getLeft(), microServicesPair.getRight(), inputInfo.gpus.size());
+            initMicroServices(microServicesPair.getLeft(), microServicesPair.getRight());
             writeOutputFile(inputInfo);
         }
         else {
@@ -93,7 +93,7 @@ public class CRMSRunner {
         return new ImmutablePair<>(microServices, timeService);
     }
 
-    private static void initMicroServices(ArrayList<? extends MicroService> microServices, TimeService ts, int gpusSize) {
+    private static void initMicroServices(ArrayList<? extends MicroService> microServices, TimeService ts) {
         ExecutorService executor = Executors.newFixedThreadPool(microServices.size() + 1);
         for (MicroService ms : microServices) {
             executor.submit(ms);
@@ -101,7 +101,7 @@ public class CRMSRunner {
         executor.submit(ts);
         executor.shutdown();
         try {
-            boolean result = executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -159,10 +159,10 @@ public class CRMSRunner {
     private static class InputInfo {
         private final ArrayList<Student> students;
         private final ArrayList<ConferenceInformation> conferences;
-        private final int duration;
-        private final int tickTime;
         private final ArrayList<GPU> gpus;
         private final ArrayList<CPU> cpus;
+        private final int tickTime;
+        private final int duration;
 
         public InputInfo(ArrayList<Student> students, ArrayList<ConferenceInformation> conferences, int duration, int tickTime, ArrayList<GPU> gpus, ArrayList<CPU> cpus) {
             this.students = students;
