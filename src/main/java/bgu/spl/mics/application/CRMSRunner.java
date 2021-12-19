@@ -39,12 +39,13 @@ public class CRMSRunner {
     }
 
     public static class OutputInfo {
-        public CopyOnWriteArrayList<String> trainedModelsNames;
-        public int processedDataBatches;
-        public int cpuTimeUsed;
-        public int gpuTimeUsed;
         public ArrayList<Student> students;
         public ArrayList<ConferenceInformation> conferences;
+        public CopyOnWriteArrayList<String> trainedModelsNames;
+        public int cpuTimeUsed;
+        public int gpuTimeUsed;
+        public int processedDataBatches;
+
 
         public OutputInfo(InputInfo inputInfo) {
             this.trainedModelsNames = Cluster.getInstance().statistics.trainedModelsNames;
